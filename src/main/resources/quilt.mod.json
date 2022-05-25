@@ -1,0 +1,34 @@
+{
+	"schema_version": 1,
+	"quilt_loader": {
+		"group": "ca.rttv",
+		"id": "ecosystemic",
+		"version": "${version}",
+		"metadata": {
+			"name": "Ecosystemic",
+			"description": "Ecosystemic is a mod that adds ecological game mechanics to Minecraft.",
+			"contributors": {
+				"RTTV": "Owner"
+			},
+			"contact": {
+				"sources": "https://github.com/RTTV/ecosystemic"
+			},
+			"icon": "assets/ecosystemic/icon.png"
+		},
+		"intermediate_mappings": "net.fabricmc:intermediary",
+		"entrypoints": {
+			"init": "ca.rttv.ecosystemic.Ecosystemic"
+		},
+		"depends": [
+			{
+				"id": "quilt_loader",
+				"versions": ">=0.16.0-"
+			},
+			{
+				"id": "minecraft",
+				"versions": ">=1.18.2"
+			}
+		]
+	},
+	"mixin": "ecosystemic.mixins.json"
+}
