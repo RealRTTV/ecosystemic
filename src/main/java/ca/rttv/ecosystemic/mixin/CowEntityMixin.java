@@ -1,30 +1,47 @@
 package ca.rttv.ecosystemic.mixin;
 
-import ca.rttv.ecosystemic.entity.ai.goal.AvoidRainGoal;
-import ca.rttv.ecosystemic.entity.ai.goal.EscapeRainGoal;
+import ca.rttv.ecosystemic.entity.AnimalEntityHelper;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.ai.pathing.PathNode;
+import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.CowEntity;
-import net.minecraft.entity.passive.PassiveEntity;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.SoftOverride;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.stream.StreamSupport;
+import java.util.LinkedHashMap;
 
 @Mixin(CowEntity.class)
-public abstract class CowEntityMixin extends PassiveEntity {
-    protected CowEntityMixin(EntityType<? extends PassiveEntity> entityType, World world) {
+abstract class CowEntityMixin extends AnimalEntityMixin {
+
+    @Unique
+    private final LinkedHashMap<BlockPos, Long> visitedSpaces = new LinkedHashMap<>();
+
+    protected CowEntityMixin(EntityType<? extends AnimalEntity> entityType, World world) {
         super(entityType, world);
     }
 
-    @Inject(method = "initGoals", at = @At("TAIL"))
-    private void initGoals(CallbackInfo ci) {
-        this.goalSelector.add(-1, new EscapeRainGoal(this)); // this works somehow
-        this.goalSelector.add(-1, new AvoidRainGoal(this)); // this works somehow
+    @SoftOverride
+    protected void initGoalsTail(CallbackInfo ci) {
+        AnimalEntityHelper.addShelterGoals(goalSelector, (PathAwareEntity) (Object) this);
+    }
+
+    @SoftOverride
+    protected void tickMovementTail(CallbackInfo ci) {
+        AnimalEntityHelper.cacheVisitedSpace(world, visitedSpaces, getBlockPos());
+    }
+
+    @SoftOverride
+    protected void readCustomDataFromNbtTail(NbtCompound nbt, CallbackInfo ci) {
+        AnimalEntityHelper.readVisitedSpaces(nbt, visitedSpaces);
+    }
+
+    @SoftOverride
+    protected void writeCustomDataToNbtTail(NbtCompound nbt, CallbackInfo ci) {
+        AnimalEntityHelper.writeVisitedSpaces(nbt, visitedSpaces);
     }
 }

@@ -9,7 +9,6 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
-import java.util.Random;
 
 public class EscapeRainGoal extends Goal {
     protected final PathAwareEntity mob;
@@ -56,8 +55,8 @@ public class EscapeRainGoal extends Goal {
         RandomGenerator random = this.mob.getRandom();
         BlockPos blockPos = this.mob.getBlockPos();
 
-        for(int i = 0; i < 10; ++i) {
-            BlockPos blockPos2 = blockPos.add(random.nextInt(20) - 10, random.nextInt(6) - 3, random.nextInt(20) - 10);
+        for(int i = 0; i < 20; ++i) {
+            BlockPos blockPos2 = blockPos.add(random.nextInt(32) - 16, random.nextInt(6) - 3, random.nextInt(32) - 16);
             if (!this.world.isSkyVisible(blockPos2) && this.mob.getPathfindingFavor(blockPos2) < 0.0F) {
                 return Vec3d.ofBottomCenter(blockPos2);
             }
