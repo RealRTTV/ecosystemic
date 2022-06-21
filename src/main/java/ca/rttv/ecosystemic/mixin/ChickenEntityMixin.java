@@ -41,7 +41,7 @@ public abstract class ChickenEntityMixin extends PassiveEntity {
         if (!world.isClient) {
             visitedSpaces.put(getBlockPos(), ((ServerWorld) world).getServer().getTicks());
             // if these lists work well, and I understand then, I can cut runtime by stopping once I hit one that is too recent to be discarded
-            visitedSpaces.entrySet().stream().filter(entry -> entry.getValue() <= ((ServerWorld) world).getServer().getTicks() - 24000).map(Map.Entry::getKey).collect(Collectors.toUnmodifiableSet()).forEach(visitedSpaces::remove);
+            visitedSpaces.entrySet().removeIf(entry -> entry.getValue() <= ((ServerWorld) world).getServer().getTicks());
         }
     }
 
