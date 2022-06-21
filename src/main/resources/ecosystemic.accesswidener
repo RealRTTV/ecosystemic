@@ -3,8 +3,11 @@ accessWidener v2 named
 # [access]   class [class]
 # accessible class net/minecraft/client/MinecraftClient - example, only keep while there is none existing of this type
 
-# [access]   field [class]                               [name]      [descriptor]
-# accessible field net/minecraft/client/MinecraftClient  instance    Lnet/minecraft/client/MinecraftClient; - example, only keep while there is none existing of this type
+# [access]   field [class]                                        [name]            [descriptor]
+accessible field net/minecraft/entity/ai/pathing/EntityNavigation pathNodeNavigator Lnet/minecraft/entity/ai/pathing/PathNodeNavigator;
+accessible field net/minecraft/entity/ai/pathing/PathNodeMaker    entityBlockXSize  I
+accessible field net/minecraft/entity/ai/pathing/PathNodeMaker    entityBlockYSize  I
+accessible field net/minecraft/entity/ai/pathing/PathNodeMaker    entityBlockZSize  I
 
 # [access]   method [class]                              [name]      [descriptor]
-# accessible method net/minecraft/client/MinecraftClient getInstance ()Lnet/minecraft/client/MinecraftClient; - example, only keep while there is none existing of this type
+accessible method net/minecraft/entity/ai/pathing/PathNodeNavigator calculateDistances (Lnet/minecraft/entity/ai/pathing/PathNode;Ljava/util/Set;)F
