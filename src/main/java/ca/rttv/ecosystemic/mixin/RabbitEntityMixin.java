@@ -20,6 +20,8 @@ abstract class RabbitEntityMixin extends AnimalEntityMixin {
 
     @Unique
     private final LinkedHashMap<BlockPos, Long> visitedSpaces = new LinkedHashMap<>();
+    @Unique
+    private long ticksMoved;
 
     protected RabbitEntityMixin(EntityType<? extends AnimalEntity> entityType, World world) {
         super(entityType, world);
@@ -32,16 +34,16 @@ abstract class RabbitEntityMixin extends AnimalEntityMixin {
 
     @SoftOverride
     protected void tickMovementTail(CallbackInfo ci) {
-        AnimalEntityHelper.cacheVisitedSpace(world, visitedSpaces, getBlockPos());
+        AnimalEntityHelper.cacheVisitedSpace(world, visitedSpaces, getBlockPos(), ++ticksMoved);
     }
 
     @SoftOverride
     protected void readCustomDataFromNbtTail(NbtCompound nbt, CallbackInfo ci) {
-        AnimalEntityHelper.readVisitedSpaces(nbt, visitedSpaces);
+        AnimalEntityHelper.readVisitedSpaces(nbt, visitedSpaces, (ticksMoved = nbt.getLong("TicksMoved")));
     }
 
     @SoftOverride
     protected void writeCustomDataToNbtTail(NbtCompound nbt, CallbackInfo ci) {
-        AnimalEntityHelper.writeVisitedSpaces(nbt, visitedSpaces);
+        AnimalEntityHelper.writeVisitedSpaces(nbt, visitedSpaces, world, ticksMoved);
     }
 }
