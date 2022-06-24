@@ -7,6 +7,7 @@ import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.RabbitEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.SoftOverride;
@@ -33,8 +34,15 @@ abstract class RabbitEntityMixin extends AnimalEntityMixin {
     }
 
     @SoftOverride
+    protected void tickMovementHead(CallbackInfo ci) {
+        if (getVelocity().x != 0 || getVelocity().z != 0 || (getVelocity().y != 0 && (!(getVelocity().y < -0.0784) || !(getVelocity().y > -0.0785)))) {
+            ticksMoved++; // it works ;)
+        }
+    }
+
+    @SoftOverride
     protected void tickMovementTail(CallbackInfo ci) {
-        AnimalEntityHelper.cacheVisitedSpace(world, visitedSpaces, getBlockPos(), ++ticksMoved);
+        AnimalEntityHelper.cacheVisitedSpace(world, visitedSpaces, getBlockPos(), ticksMoved);
     }
 
     @SoftOverride

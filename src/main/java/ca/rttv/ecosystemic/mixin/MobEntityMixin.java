@@ -3,6 +3,7 @@ package ca.rttv.ecosystemic.mixin;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.GoalSelector;
+import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
@@ -17,6 +18,9 @@ abstract class MobEntityMixin extends LivingEntity {
     @Shadow
     @Final
     protected GoalSelector goalSelector;
+
+    @Shadow
+    public abstract EntityNavigation getNavigation();
 
     protected MobEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);

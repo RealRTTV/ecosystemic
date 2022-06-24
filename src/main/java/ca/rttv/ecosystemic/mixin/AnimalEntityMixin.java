@@ -30,4 +30,9 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
     protected void tickMovementTail(CallbackInfo ci) {
 
     }
+
+    @Inject(method = "tickMovement", at = @At("HEAD"))
+    protected void tickMovementHead(CallbackInfo ci) {
+
+    }
 }
