@@ -45,7 +45,7 @@ public class AnimalEntityHelper {
     public static void cacheVisitedSpace(World world, Map<BlockPos, Long> visitedSpaces, BlockPos pos, long ticksMoved) {
         if (!world.isClient) {
             visitedSpaces.put(pos, ticksMoved); // this is why it is a map
-            visitedSpaces.entrySet().removeIf(entry -> entry.getValue() <= ticksMoved - 100);
+            visitedSpaces.entrySet().removeIf(entry -> entry.getValue() <= ticksMoved - 24000);
         }
     }
 
