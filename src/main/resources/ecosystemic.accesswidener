@@ -1,13 +1,12 @@
 accessWidener v2 named
 
-# [access]   class [class]
+# [access] class [class]
 # accessible class net/minecraft/client/MinecraftClient - example, only keep while there is none existing of this type
 
-# [access]   field [class]                                        [name]            [descriptor]
-accessible field net/minecraft/entity/ai/pathing/EntityNavigation pathNodeNavigator Lnet/minecraft/entity/ai/pathing/PathNodeNavigator;
-accessible field net/minecraft/entity/ai/pathing/PathNodeMaker    entityBlockXSize  I
-accessible field net/minecraft/entity/ai/pathing/PathNodeMaker    entityBlockYSize  I
-accessible field net/minecraft/entity/ai/pathing/PathNodeMaker    entityBlockZSize  I
+# [access] field [class]                                [name]        [descriptor]
+accessible field net/minecraft/client/world/ClientWorld entityManager Lnet/minecraft/client/world/ClientEntityManager;
+accessible field net/minecraft/server/world/ServerWorld entityManager Lnet/minecraft/server/world/ServerEntityManager;
+accessible field net/minecraft/entity/Entity            LOGGER        Lorg/slf4j/Logger;
 
-# [access]   method [class]                              [name]      [descriptor]
-accessible method net/minecraft/entity/ai/pathing/PathNodeNavigator calculateDistances (Lnet/minecraft/entity/ai/pathing/PathNode;Ljava/util/Set;)F
+# [access] method [class]                                  [name] [descriptor]
+accessible method net/minecraft/entity/effect/StatusEffect <init> (Lnet/minecraft/entity/effect/StatusEffectType;I)V

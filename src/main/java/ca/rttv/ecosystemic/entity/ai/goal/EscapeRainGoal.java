@@ -6,9 +6,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.random.RandomGenerator;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
+import java.util.Optional;
 
 public class EscapeRainGoal extends Goal {
     protected final PathAwareEntity mob;
@@ -29,13 +29,13 @@ public class EscapeRainGoal extends Goal {
     }
 
     protected boolean targetShelterPos() {
-        Vec3d vec3d = this.locateShelterPos();
-        if (vec3d == null) {
+        Optional<Vec3d> vec3d = this.locateShelterPos();
+        if (vec3d.isEmpty()) {
             return false;
         } else {
-            this.targetX = vec3d.x;
-            this.targetY = vec3d.y;
-            this.targetZ = vec3d.z;
+            this.targetX = vec3d.get().x;
+            this.targetY = vec3d.get().y;
+            this.targetZ = vec3d.get().z;
             return true;
         }
     }
@@ -50,18 +50,17 @@ public class EscapeRainGoal extends Goal {
         this.mob.getNavigation().startMovingTo(this.targetX, this.targetY, this.targetZ, 1.0f);
     }
 
-    @Nullable
-    protected Vec3d locateShelterPos() {
+    protected Optional<Vec3d> locateShelterPos() {
         RandomGenerator random = this.mob.getRandom();
         BlockPos blockPos = this.mob.getBlockPos();
 
         for(int i = 0; i < 20; ++i) {
             BlockPos blockPos2 = blockPos.add(random.nextInt(32) - 16, random.nextInt(6) - 3, random.nextInt(32) - 16);
             if (!this.world.isSkyVisible(blockPos2) && this.mob.getPathfindingFavor(blockPos2) < 0.0F) {
-                return Vec3d.ofBottomCenter(blockPos2);
+                return Optional.of(Vec3d.ofBottomCenter(blockPos2));
             }
         }
 
-        return null;
+        return Optional.empty();
     }
 }

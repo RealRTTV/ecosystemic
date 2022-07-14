@@ -7,12 +7,16 @@
     "AnimalEntityMixin",
     "ChickenEntityMixin",
     "CowEntityMixin",
+    "LivingEntityMixin",
     "MobEntityMixin",
     "PigEntityMixin",
     "RabbitEntityMixin",
-    "SheepEntityMixin"
+    "SheepEntityMixin",
+    "StatusEffectsMixin"
   ],
   "client": [
+    "ClientPlayerNetworkHandlerMixin",
+    "LivingEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
