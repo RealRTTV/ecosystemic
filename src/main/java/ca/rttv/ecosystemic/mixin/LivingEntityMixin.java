@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LivingEntity.class)
 abstract class LivingEntityMixin extends Entity {
     @Shadow
-    public abstract RandomGenerator getRandom();
+    public native RandomGenerator getRandom();
 
     @Shadow
     public float bodyYaw;

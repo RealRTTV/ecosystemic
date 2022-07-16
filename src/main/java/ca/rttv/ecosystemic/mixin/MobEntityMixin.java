@@ -3,6 +3,7 @@ package ca.rttv.ecosystemic.mixin;
 import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
 import ca.rttv.ecosystemic.entity.ai.goal.AvoidRainGoal;
 import ca.rttv.ecosystemic.entity.ai.goal.EscapeRainGoal;
+import ca.rttv.ecosystemic.entity.ai.goal.LookAtSkyGoal;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.GoalSelector;
@@ -25,7 +26,10 @@ abstract class MobEntityMixin extends LivingEntityMixin {
     protected GoalSelector goalSelector;
 
     @Shadow
-    public abstract EntityNavigation getNavigation();
+    public native EntityNavigation getNavigation();
+
+    @Shadow
+    public abstract void onEatingGrass();
 
     protected MobEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
@@ -33,12 +37,13 @@ abstract class MobEntityMixin extends LivingEntityMixin {
 
     @Inject(method = "initGoals", at = @At("TAIL"))
     protected void ecosystemic$initGoalsTail(CallbackInfo ci) {
-        if (!(this instanceof AnimalEntityDuck)) {
+        if (!(this instanceof AnimalEntityDuck duck)) {
             return;
         }
 
-        goalSelector.add(-1, new EscapeRainGoal((PathAwareEntity) (Object) this)); // this works somehow
-        goalSelector.add(-1, new AvoidRainGoal((PathAwareEntity) (Object) this)); // this works somehow
+        goalSelector.add(20, new EscapeRainGoal((PathAwareEntity) (Object) this));
+        goalSelector.add(20, new AvoidRainGoal((PathAwareEntity) (Object) this));
+        goalSelector.add(15, new LookAtSkyGoal((PathAwareEntity) (Object) this, duck));
     }
 }
 

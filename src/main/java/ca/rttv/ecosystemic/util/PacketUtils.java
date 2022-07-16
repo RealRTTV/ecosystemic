@@ -11,7 +11,7 @@ import org.quiltmc.qsl.networking.api.ServerPlayNetworking;
 
 import java.util.function.Consumer;
 
-public class PacketUtil {
+public class PacketUtils {
     /**
      * A method in which a packet will be sent to every {@link PlayerEntity} which has the specified {@link BlockPos} loaded
      * @param world the world in which the players exist
