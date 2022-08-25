@@ -6,6 +6,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.random.RandomGenerator;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 
 import java.util.EnumSet;
 import java.util.Optional;
@@ -25,7 +26,7 @@ public class EscapeRainGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        return world.isRaining() && world.isSkyVisible(mob.getBlockPos()) && targetShelterPos();
+        return world.isRaining() && world.isSkyVisible(mob.getBlockPos()) && world.getBiome(mob.getBlockPos()).value().getPrecipitation() != Biome.Precipitation.NONE && targetShelterPos();
     }
 
     protected boolean targetShelterPos() {

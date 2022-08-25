@@ -4,6 +4,7 @@ import net.minecraft.entity.ai.NavigationConditions;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.world.biome.Biome;
 
 public class AvoidRainGoal extends Goal {
     private final PathAwareEntity mob;
@@ -14,7 +15,7 @@ public class AvoidRainGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        return this.mob.world.isRaining() && NavigationConditions.hasMobNavigation(this.mob);
+        return this.mob.world.isRaining() && mob.world.getBiome(mob.getBlockPos()).value().getPrecipitation() != Biome.Precipitation.NONE && NavigationConditions.hasMobNavigation(this.mob);
     }
 
     @Override
@@ -27,6 +28,5 @@ public class AvoidRainGoal extends Goal {
         if (NavigationConditions.hasMobNavigation(this.mob)) {
             ((MobNavigation)this.mob.getNavigation()).setAvoidSunlight(false);
         }
-
     }
 }

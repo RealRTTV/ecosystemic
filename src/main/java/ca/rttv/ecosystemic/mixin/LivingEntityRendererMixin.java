@@ -3,17 +3,24 @@ package ca.rttv.ecosystemic.mixin;
 import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(LivingEntityRenderer.class)
-final class LivingEntityRendererMixin<T extends LivingEntity> {
+final class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>> {
+    @Shadow
+    @SuppressWarnings("ShadowModifiers")
+    private M model;
     @Unique
     private static final float[] RED_VISITED_SPACES   = {0x3f, 0x25, 0x42, 0x4f, 0x5d, 0x6e, 0x73, 0x83, 0xa8, 0xbf, 0xd0, 0xbe};
     @Unique
@@ -31,5 +38,23 @@ final class LivingEntityRendererMixin<T extends LivingEntity> {
         args.set(4, colors.getX());
         args.set(5, colors.getY());
         args.set(6, colors.getZ());
+    }
+
+    @Inject(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;animateModel(Lnet/minecraft/entity/Entity;FFF)V", shift = At.Shift.AFTER))
+    private void animateModel(T livingEntity, float f, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
+        if (!(livingEntity instanceof AnimalEntityDuck duck)) {
+            return;
+        }
+
+        duck.ecosystemic$headParts(model).forEach(part -> part.pivotY = duck.ecosystemic$basePivotY() + duck.ecosystemic$neckAngle(tickDelta) * duck.ecosystemic$neckMultiplier());
+    }
+
+    @Inject(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;setAngles(Lnet/minecraft/entity/Entity;FFFFF)V", shift = At.Shift.AFTER))
+    private void setAngles(T livingEntity, float f, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
+        if (!(livingEntity instanceof AnimalEntityDuck duck)) {
+            return;
+        }
+
+        duck.ecosystemic$headParts(model).forEach(part -> part.pitch = duck.ecosystemic$headAngle(tickDelta));
     }
 }

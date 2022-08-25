@@ -1,12 +1,18 @@
 package ca.rttv.ecosystemic.mixin;
 
 import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
+import ca.rttv.ecosystemic.entity.ai.goal.AvoidRainGoal;
+import ca.rttv.ecosystemic.entity.ai.goal.DrinkWaterGoal;
+import ca.rttv.ecosystemic.entity.ai.goal.EscapeRainGoal;
+import ca.rttv.ecosystemic.entity.ai.goal.LookAtSkyGoal;
 import ca.rttv.ecosystemic.network.packet.s2c.play.VisitedSpaceCountS2CPacket;
 import ca.rttv.ecosystemic.util.PacketUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ai.goal.EatGrassGoal;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -17,7 +23,9 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.SoftOverride;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,6 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.IntSupplier;
 import java.util.stream.IntStream;
 
 @Mixin(AnimalEntity.class)
@@ -42,11 +51,23 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
     private int ticksWithSkylight;
     @Unique
     private int failedLoveAttempts; // mojmap has weird names, so I will too
+    @Unique
+    private int nibbleTimer;
+    @Unique
+    private EatGrassGoal eatGrassGoal;
+    @Unique
+    private DrinkWaterGoal drinkWaterGoal;
+    @Unique
+    private boolean nibblingWater;
 
     protected AnimalEntityMixin(EntityType<? extends MobEntity> entityType, World world) {
         super(entityType, world);
     }
 
+    @Shadow
+    public native void lovePlayer(@Nullable PlayerEntity player);
+
+    // if the entity already exists, it'll read nbt before any interactions occur
     @Inject(method = "<init>", at = @At("TAIL"))
     private void init(EntityType<? extends MobEntity> entityType, World world, CallbackInfo ci) {
         if (!(this instanceof AnimalEntityDuck duck)) {
@@ -56,9 +77,29 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
         if (world.isClient) {
             duck.ecosystemic$visitedSpaceCount(12);
         } else {
-            BlockPos.iterate(getBlockPos().add(-1, 0, -1), getBlockPos().add(1, 0, 2)).forEach(mutablePos -> visitedSpaces.put(mutablePos.toImmutable(), -20000L));
+            int[] i = {0};
+            BlockPos.iterate(getBlockPos().add(-1, 0, -1), getBlockPos().add(1, 0, 2)).forEach(mutablePos -> {
+                visitedSpaces.put(mutablePos.toImmutable(), -20000L + i[0]);
+                i[0] += 1000;
+            });
             ticksWithSkylight = 6000;
         }
+    }
+
+    @SoftOverride
+    protected void ecosystemic$initGoalsTail(CallbackInfo ci) {
+        if (!(this instanceof AnimalEntityDuck duck)) {
+            return;
+        }
+
+        goalSelector.add(-1, new EscapeRainGoal((PathAwareEntity) (Object) this));
+        goalSelector.add(-1, new AvoidRainGoal((PathAwareEntity) (Object) this));
+        goalSelector.add(4, new LookAtSkyGoal((PathAwareEntity) (Object) this, duck));
+        //noinspection ConstantConditions -- checked
+        if (goalSelector.getGoals().stream().noneMatch(goal -> goal.getGoal() instanceof EatGrassGoal grass && (eatGrassGoal = grass) != null)) {
+            goalSelector.add(5, eatGrassGoal = new EatGrassGoal((PathAwareEntity) (Object) this));
+        }
+        goalSelector.add(5, drinkWaterGoal = new DrinkWaterGoal((AnimalEntity) (Object) this, duck));
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
@@ -78,6 +119,15 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
                 .toArray());
         nbt.putInt("TicksWithSunlight", ticksWithSkylight);
         nbt.putInt("FailedLoveAttempts", failedLoveAttempts);
+    }
+
+    @Inject(method = "mobTick", at = @At("TAIL"))
+    private void mobTick(CallbackInfo ci) {
+        if (!(this instanceof AnimalEntityDuck)) {
+            return;
+        }
+
+        nibbleTimer = nibblingWater ? drinkWaterGoal.timer() : eatGrassGoal.getTimer();
     }
 
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
@@ -111,7 +161,7 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
             visitedSpaces.put(getBlockPos(), ticksMoved); // this is why it is a map
             visitedSpaces.values().removeIf(entry -> entry <= ticksMoved - 24000);
             if (visitedSpaces.size() != prevVisitedSpacesCount) {
-                PacketUtils.sendPacketToPlayers((ServerWorld) world, getBlockPos(), new Identifier("ecosystemic", "visitedspacecounts2cpacket")).accept(new VisitedSpaceCountS2CPacket(visitedSpaces.size(), uuid).toBuf());
+                PacketUtils.sendPacketToPlayers((ServerWorld) world, getBlockPos(), new Identifier("ecosystemic", "visitedspacecounts2cpacket"), new VisitedSpaceCountS2CPacket(visitedSpaces.size(), uuid));
             }
             if (world.isDay()) {
                 ticksWithSkylight += world.isSkyVisible(getBlockPos()) ? 1 : -1;
@@ -120,20 +170,28 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
             if (duck.ecosystemic$visitedSpaceCount() < 12 && getRandom().nextInt(10) == 0) {
                 world.addParticle(
                         ParticleTypes.SNEEZE,
-                        getX() - (double) (getWidth() + 1.0f) * 0.5 * (double) MathHelper.sin(bodyYaw * MathHelper.RADIANS_PER_DEGREE),
+                        getX() - (double) (getWidth() + 1.0f) * 0.5 * (double) MathHelper.sin(headYaw * MathHelper.RADIANS_PER_DEGREE),
                         getEyeY() - 0.1f,
-                        getZ() + (double) (getWidth() + 1.0f) * 0.5 * (double) MathHelper.cos(bodyYaw * MathHelper.RADIANS_PER_DEGREE),
+                        getZ() + (double) (getWidth() + 1.0f) * 0.5 * (double) MathHelper.cos(headYaw * MathHelper.RADIANS_PER_DEGREE),
                         getVelocity().x,
                         0.0d,
                         getVelocity().z
                 );
+            }
+            nibbleTimer = Math.max(0, nibbleTimer - 1);
+            if (nibbleTimer == 0) {
+                nibblingWater = false;
             }
         }
     }
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     protected void ecosystemic$tickMovementHead(CallbackInfo ci) {
-        if (getVelocity().x == 0 && getVelocity().z == 0 && (getVelocity().y == 0 || getVelocity().y < -0.0784 && getVelocity().y > -0.0785) && getNavigation().getCurrentPath() != null) {
+        if (getVelocity().x == 0
+         && getVelocity().z == 0
+         && (getVelocity().y == 0 || getVelocity().y < -0.0784 && getVelocity().y > -0.0785)
+         && getNavigation().getCurrentPath() != null)
+        {
             return; // has to be moving and have a current path for pathfinding
         }
 
@@ -180,26 +238,70 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
         cir.setReturnValue(false);
     }
 
+    @Inject(method = "handleStatus", at = @At("HEAD"), cancellable = true)
+    private void handleStatus(byte status, CallbackInfo ci) {
+        if (status == 10) {
+            nibbleTimer = 40;
+            nibblingWater = false;
+            ci.cancel();
+        }
+    }
+
     @SoftOverride
     protected boolean ecosystemic$shouldDropLoot() {
         return this instanceof AnimalEntityDuck && visitedSpaces.size() >= 12;
     }
 
-    // this is the best feature of java
+    @SoftOverride
+    protected void ecosystemic$onEatingGrassTail(CallbackInfo ci) {
+        lovePlayer(world.getClosestPlayer(this, 32));
+    }
+
     @SuppressWarnings("unused")
     public void ecosystemic$visitedSpaceCount(int count) {
         visitedSpaceCount = count;
     }
 
-    // this is the best feature of java
     @SuppressWarnings("unused")
     public int ecosystemic$visitedSpaceCount() {
         return visitedSpaceCount;
     }
 
-    // this is the best feature of java
     @SuppressWarnings("unused")
     public int ecosystemic$ticksWithSkylight() {
         return ticksWithSkylight;
     }
+
+    @SuppressWarnings("unused")
+    public float ecosystemic$headAngle(float tickDelta) {
+        if (this.nibbleTimer > 4 && this.nibbleTimer <= 36) {
+            return (float) (Math.PI / 5) + 0.21991149F * MathHelper.sin(((float) (this.nibbleTimer - 4) - tickDelta) * 0.896875f);
+        } else if (this.nibbleTimer > 0) {
+            return (float) (Math.PI / 5);
+        } else {
+            return this.getPitch() * (float) (Math.PI / 180.0f);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public float ecosystemic$neckAngle(float tickDelta) {
+        if (this.nibbleTimer <= 0) {
+            return 0.0f;
+        } else if (this.nibbleTimer >= 4 && this.nibbleTimer <= 36) {
+            return 1.0f;
+        } else if (this.nibbleTimer < 4) {
+            return ((float) this.nibbleTimer - tickDelta) / 4.0f;
+        } else {
+            return -((float) (this.nibbleTimer - 40) - tickDelta) / 4.0f;
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public void ecosystemic$waterTimer(int timer) {
+        nibbleTimer = timer;
+        nibblingWater = true;
+    }
+
+    @SuppressWarnings("unused")
+    public void ecosystemic$onDrinkWater(IntSupplier drinkableWaterBlocks) { }
 }

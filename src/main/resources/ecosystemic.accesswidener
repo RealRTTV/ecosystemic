@@ -3,10 +3,18 @@ accessWidener v2 named
 # [access] class [class]
 # accessible class net/minecraft/client/MinecraftClient - example, only keep while there is none existing of this type
 
-# [access] field [class]                                [name]        [descriptor]
-accessible field net/minecraft/client/world/ClientWorld entityManager Lnet/minecraft/client/world/ClientEntityManager;
-accessible field net/minecraft/server/world/ServerWorld entityManager Lnet/minecraft/server/world/ServerEntityManager;
-accessible field net/minecraft/entity/Entity            LOGGER        Lorg/slf4j/Logger;
+# [access] field [class]                                                       [name]        [descriptor]
+accessible field net/minecraft/client/world/ClientWorld                        entityManager Lnet/minecraft/client/world/ClientEntityManager;
+accessible field net/minecraft/server/world/ServerWorld                        entityManager Lnet/minecraft/server/world/ServerEntityManager;
+accessible field net/minecraft/entity/Entity                                   LOGGER        Lorg/slf4j/Logger;
+accessible field net/minecraft/client/render/entity/model/ChickenEntityModel   head          Lnet/minecraft/client/model/ModelPart;
+accessible field net/minecraft/client/render/entity/model/ChickenEntityModel   beak          Lnet/minecraft/client/model/ModelPart;
+accessible field net/minecraft/client/render/entity/model/ChickenEntityModel   wattle        Lnet/minecraft/client/model/ModelPart;
+accessible field net/minecraft/client/render/entity/model/QuadrupedEntityModel head          Lnet/minecraft/client/model/ModelPart;
+accessible field net/minecraft/client/render/entity/model/RabbitEntityModel    head          Lnet/minecraft/client/model/ModelPart;
+accessible field net/minecraft/client/render/entity/model/RabbitEntityModel    nose          Lnet/minecraft/client/model/ModelPart;
+accessible field net/minecraft/client/render/entity/model/RabbitEntityModel    leftEar       Lnet/minecraft/client/model/ModelPart;
+accessible field net/minecraft/client/render/entity/model/RabbitEntityModel    rightEar      Lnet/minecraft/client/model/ModelPart;
 
 # [access] method [class]                                  [name] [descriptor]
 accessible method net/minecraft/entity/effect/StatusEffect <init> (Lnet/minecraft/entity/effect/StatusEffectType;I)V

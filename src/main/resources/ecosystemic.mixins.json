@@ -6,11 +6,16 @@
   "mixins": [
     "AnimalEntityMixin",
     "ChickenEntityMixin",
+    "CowEntityInheritMixin",
+    "CowEntityInitGoalsMixin",
     "CowEntityMixin",
+    "EatGrassGoalMixin",
     "LivingEntityMixin",
     "MobEntityMixin",
+    "PassiveEntityMixin",
     "PigEntityMixin",
     "RabbitEntityMixin",
+    "SheepEntityInheritMixin",
     "SheepEntityMixin",
     "StatusEffectsMixin"
   ],

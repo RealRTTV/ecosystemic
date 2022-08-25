@@ -17,7 +17,7 @@ abstract class LivingEntityMixin extends Entity {
     public native RandomGenerator getRandom();
 
     @Shadow
-    public float bodyYaw;
+    public float headYaw;
 
     public LivingEntityMixin(EntityType<?> entityType, World world) {
         super(entityType, world);
