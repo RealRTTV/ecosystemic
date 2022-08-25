@@ -30,5 +30,6 @@
 			}
 		]
 	},
-	"mixin": "ecosystemic.mixins.json"
+	"mixin": "ecosystemic.mixins.json",
+	"access_widener": "ecosystemic.accesswidener"
 }

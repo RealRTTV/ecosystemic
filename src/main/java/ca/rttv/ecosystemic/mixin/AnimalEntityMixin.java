@@ -35,6 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.stream.IntStream;
 
@@ -304,4 +305,9 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
 
     @SuppressWarnings("unused")
     public void ecosystemic$onDrinkWater(IntSupplier drinkableWaterBlocks) { }
+
+    @SuppressWarnings("unused")
+    public Set<BlockPos> ecosystemic$visitedSpaces() {
+        return visitedSpaces.keySet();
+    }
 }
