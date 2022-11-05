@@ -8,7 +8,6 @@ import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
 import org.quiltmc.qsl.networking.api.ServerPlayNetworking;
 
 public class PacketUtils {
@@ -19,7 +18,7 @@ public class PacketUtils {
      * @param packet the packet to send to the clients
      */
     public static void sendPacketToPlayers(ServerWorld world, BlockPos pos, Packet<ClientPlayPacketListener> packet) {
-        world.getPlayers(player -> player.getWorld().isChunkLoaded(ChunkSectionPos.getSectionCoord(pos.getX()), ChunkSectionPos.getSectionCoord(pos.getZ()))).forEach(player -> player.networkHandler.sendPacket(packet));
+        world.getPlayers(player -> player.getBlockPos().isWithinDistance(pos, 128)).forEach(player -> player.networkHandler.sendPacket(packet));
     }
 
     /**
@@ -32,6 +31,6 @@ public class PacketUtils {
     public static void sendPacketToPlayers(ServerWorld world, BlockPos pos, Identifier channel, Packet<ClientPlayPacketListener> packet) {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
         packet.write(buf);
-        ServerPlayNetworking.send(world.getPlayers(player -> player.getWorld().isChunkLoaded(ChunkSectionPos.getSectionCoord(pos.getX()), ChunkSectionPos.getSectionCoord(pos.getZ()))), channel, buf);
+        ServerPlayNetworking.send(world.getPlayers(player -> player.getBlockPos().isWithinDistance(pos, 128)), channel, buf);
     }
 }

@@ -1,4 +1,4 @@
-package ca.rttv.ecosystemic.mixin;
+package ca.rttv.ecosystemic.mixin.net.minecraft.entity;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
-abstract class LivingEntityMixin extends Entity {
+public abstract class LivingEntityMixin extends Entity {
     @Shadow
     public native RandomGenerator getRandom();
 

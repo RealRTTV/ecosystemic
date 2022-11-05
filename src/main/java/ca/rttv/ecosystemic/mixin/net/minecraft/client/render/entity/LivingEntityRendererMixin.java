@@ -1,4 +1,4 @@
-package ca.rttv.ecosystemic.mixin;
+package ca.rttv.ecosystemic.mixin.net.minecraft.client.render.entity;
 
 import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(LivingEntityRenderer.class)
-final class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>> {
+public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>> {
     @Shadow
     @SuppressWarnings("ShadowModifiers")
     private M model;
@@ -55,6 +55,6 @@ final class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityMo
             return;
         }
 
-        duck.ecosystemic$headParts(model).forEach(part -> part.pitch = duck.ecosystemic$headAngle(tickDelta));
+        duck.ecosystemic$headParts(model).forEach(part -> part.pitch = (duck.ecosystemic$addPitch() ? part.pitch : 0) + duck.ecosystemic$headAngle(tickDelta));
     }
 }

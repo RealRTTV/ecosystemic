@@ -4,24 +4,28 @@
   "package": "ca.rttv.ecosystemic.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "AnimalEntityMixin",
-    "ChickenEntityMixin",
-    "CowEntityInitGoalsMixin",
-    "CowEntityMixin",
-    "EatGrassGoalMixin",
-    "LivingEntityMixin",
-    "MobEntityMixin",
-    "PassiveEntityMixin",
-    "PigEntityMixin",
-    "RabbitEntityMixin",
-    "SheepEntityMixin",
-    "StatusEffectsMixin"
+    "net.minecraft.entity.LivingEntityMixin",
+    "net.minecraft.entity.ai.goal.EatGrassGoalMixin",
+    "net.minecraft.entity.mob.MobEntityMixin",
+    "net.minecraft.entity.passive.AnimalEntityMixin",
+    "net.minecraft.entity.passive.ChickenEntityMixin",
+    "net.minecraft.entity.passive.CowEntityInitGoalsMixin",
+    "net.minecraft.entity.passive.CowEntityMixin",
+    "net.minecraft.entity.passive.DonkeyEntityMixin",
+    "net.minecraft.entity.passive.HorseBaseEntityMixin",
+    "net.minecraft.entity.passive.HorseEntityMixin",
+    "net.minecraft.entity.passive.PassiveEntityMixin",
+    "net.minecraft.entity.passive.PigEntityMixin",
+    "net.minecraft.entity.passive.RabbitEntityMixin",
+    "net.minecraft.entity.passive.SheepEntityMixin",
+    "net.minecraft.server.world.ServerWorldMixin",
+    "net.minecraft.world.GameRulesMixin"
   ],
   "client": [
-    "ClientPlayerNetworkHandlerMixin",
-    "LivingEntityRendererMixin"
+    "net.minecraft.client.network.ClientPlayNetworkHandlerMixin",
+    "net.minecraft.client.render.entity.LivingEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-	}
+  }
 }

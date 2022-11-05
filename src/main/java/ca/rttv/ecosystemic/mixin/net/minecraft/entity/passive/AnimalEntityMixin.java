@@ -1,12 +1,12 @@
-package ca.rttv.ecosystemic.mixin;
+package ca.rttv.ecosystemic.mixin.net.minecraft.entity.passive;
 
 import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
 import ca.rttv.ecosystemic.entity.ai.goal.AvoidRainGoal;
 import ca.rttv.ecosystemic.entity.ai.goal.DrinkWaterGoal;
 import ca.rttv.ecosystemic.entity.ai.goal.EscapeRainGoal;
 import ca.rttv.ecosystemic.entity.ai.goal.LookAtSkyGoal;
-import ca.rttv.ecosystemic.network.packet.s2c.play.VisitedSpaceCountS2CPacket;
-import ca.rttv.ecosystemic.util.PacketUtils;
+import ca.rttv.ecosystemic.mixin.net.minecraft.entity.mob.MobEntityMixin;
+import ca.rttv.ecosystemic.registry.GameRulesRegistry;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.EntityType;
@@ -19,10 +19,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldView;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,18 +34,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.function.IntSupplier;
-import java.util.stream.IntStream;
 
 @Mixin(AnimalEntity.class)
-abstract class AnimalEntityMixin extends MobEntityMixin {
+public abstract class AnimalEntityMixin extends MobEntityMixin {
     @Unique
-    private final Map<BlockPos, Long> visitedSpaces = new LinkedHashMap<>();
-    @Unique
-    private long ticksMoved;
+    private final Set<BlockPos> visitedSpaces = new HashSet<>(64);
     @Unique
     @Environment(EnvType.CLIENT)
     private int visitedSpaceCount;
@@ -60,6 +59,8 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
     private DrinkWaterGoal drinkWaterGoal;
     @Unique
     private boolean nibblingWater;
+    @Unique
+    private int ticksExisting;
 
     protected AnimalEntityMixin(EntityType<? extends MobEntity> entityType, World world) {
         super(entityType, world);
@@ -67,6 +68,9 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
 
     @Shadow
     public native void lovePlayer(@Nullable PlayerEntity player);
+
+    @Shadow
+    public abstract float getPathfindingFavor(BlockPos pos, WorldView world);
 
     // if the entity already exists, it'll read nbt before any interactions occur
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -78,12 +82,9 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
         if (world.isClient) {
             duck.ecosystemic$visitedSpaceCount(12);
         } else {
-            int[] i = {0};
-            BlockPos.iterate(getBlockPos().add(-1, 0, -1), getBlockPos().add(1, 0, 2)).forEach(mutablePos -> {
-                visitedSpaces.put(mutablePos.toImmutable(), -20000L + i[0]);
-                i[0] += 1000;
-            });
+            ecosystemic$calculateVisitedSpaces();
             ticksWithSkylight = 6000;
+            ticksExisting = 0;
         }
     }
 
@@ -109,15 +110,7 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
             return;
         }
 
-        nbt.putLong("TicksMoved", ticksMoved);
-        nbt.putIntArray("VisitedSpaces", visitedSpaces.entrySet()
-                .stream()
-                .flatMapToInt(entry -> IntStream.of(
-                        (int) ((entry.getKey().asLong() & 0xFFFFFFFF00000000L) >>> 32L),
-                        (int) (entry.getKey().asLong() & 0x00000000FFFFFFFFL),
-                        (int) (ticksMoved - entry.getValue()))
-                )
-                .toArray());
+        // do not cache
         nbt.putInt("TicksWithSunlight", ticksWithSkylight);
         nbt.putInt("FailedLoveAttempts", failedLoveAttempts);
     }
@@ -137,18 +130,8 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
             return;
         }
 
-        ticksMoved = nbt.getLong("TicksMoved");
         ticksWithSkylight = nbt.getInt("TicksWithSkylight");
         failedLoveAttempts = nbt.getInt("FailedLoveAttempts");
-        visitedSpaces.clear();
-        // normally an nbt list cannot hold multiple types so split the BlockPos into 2 ints with 1 remaining for the time visited since 3 ints is better than 2 longs (96 bits vs 128 bits)
-        int[] list = nbt.getIntArray("VisitedSpaces");
-        if (list.length % 3 != 0) {
-            LOGGER.error("VisitedSpaces length must be divisible by 3 to work properly, ignoring remaining " + list.length % 2 + " ints");
-        }
-        for (int i = 0; i < list.length / 3 * 3; ) {
-            visitedSpaces.put(BlockPos.fromLong((long) list[i++] << 32 | list[i++]), list[i++] + ticksMoved);
-        }
     }
 
     @Inject(method = "tickMovement", at = @At("TAIL"))
@@ -158,12 +141,6 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
         }
 
         if (!world.isClient) {
-            int prevVisitedSpacesCount = visitedSpaces.size();
-            visitedSpaces.put(getBlockPos(), ticksMoved); // this is why it is a map
-            visitedSpaces.values().removeIf(entry -> entry <= ticksMoved - 24000);
-            if (visitedSpaces.size() != prevVisitedSpacesCount) {
-                PacketUtils.sendPacketToPlayers((ServerWorld) world, getBlockPos(), new Identifier("ecosystemic", "visitedspacecounts2cpacket"), new VisitedSpaceCountS2CPacket(visitedSpaces.size(), uuid));
-            }
             if (world.isDay()) {
                 ticksWithSkylight += world.isSkyVisible(getBlockPos()) ? 1 : -1;
             }
@@ -188,19 +165,14 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     protected void ecosystemic$tickMovementHead(CallbackInfo ci) {
-        if (getVelocity().x == 0
-         && getVelocity().z == 0
-         && (getVelocity().y == 0 || getVelocity().y < -0.0784 && getVelocity().y > -0.0785)
-         && getNavigation().getCurrentPath() != null)
-        {
-            return; // has to be moving and have a current path for pathfinding
-        }
-
         if (!(this instanceof AnimalEntityDuck)) {
             return;
         }
 
-        ticksMoved++; // it works ;)
+        ticksExisting++;
+        if (!world.isClient && ticksExisting % world.getGameRules().getInt(GameRulesRegistry.ECOSYSTEMIC_VISITABLE_SPACES_CALCULATE_INTERVAL) == 0) { // todo gamerule for value
+            ecosystemic$calculateVisitedSpaces();
+        }
     }
 
     @Inject(method = "isBreedingItem", at = @At("HEAD"), cancellable = true)
@@ -245,6 +217,37 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
             nibbleTimer = 40;
             nibblingWater = false;
             ci.cancel();
+        }
+    }
+
+    public void ecosystemic$calculateVisitedSpaces() {
+        visitedSpaces.clear();
+        BlockPos[] offsets = new BlockPos[]{
+                BlockPos.ORIGIN.offset(Direction.NORTH),
+                BlockPos.ORIGIN.offset(Direction.EAST),
+                BlockPos.ORIGIN.offset(Direction.SOUTH),
+                BlockPos.ORIGIN.offset(Direction.WEST),
+                BlockPos.ORIGIN.offset(Direction.NORTH).offset(Direction.UP),
+                BlockPos.ORIGIN.offset(Direction.EAST).offset(Direction.UP),
+                BlockPos.ORIGIN.offset(Direction.SOUTH).offset(Direction.UP),
+                BlockPos.ORIGIN.offset(Direction.WEST).offset(Direction.UP),
+                BlockPos.ORIGIN.offset(Direction.NORTH).offset(Direction.DOWN),
+                BlockPos.ORIGIN.offset(Direction.EAST).offset(Direction.DOWN),
+                BlockPos.ORIGIN.offset(Direction.SOUTH).offset(Direction.DOWN),
+                BlockPos.ORIGIN.offset(Direction.WEST).offset(Direction.DOWN)
+        };
+        List<BlockPos> stack = new LinkedList<>();
+        stack.add(getBlockPos());
+        while (visitedSpaces.size() < 64 && stack.size() > 0) {
+            BlockPos pos = stack.remove(0);
+            if (getPathfindingFavor(pos, world) > world.m_jwglzkvy(pos) && world.isAir(pos) && getPathfindingFavor(pos, world) != 0) {
+                visitedSpaces.add(pos);
+                for (BlockPos offset : offsets) {
+                    if (!visitedSpaces.contains(pos.add(offset)) && !stack.contains(pos.add(offset))) {
+                        stack.add(pos.add(offset));
+                    }
+                }
+            }
         }
     }
 
@@ -308,6 +311,14 @@ abstract class AnimalEntityMixin extends MobEntityMixin {
 
     @SuppressWarnings("unused")
     public Set<BlockPos> ecosystemic$visitedSpaces() {
-        return visitedSpaces.keySet();
+        return visitedSpaces;
+    }
+
+    @SuppressWarnings("unused")
+    public void ecosystemic$addSleepingTicks(int count) {}
+
+    @SuppressWarnings("unused")
+    public boolean ecosystemic$addPitch() {
+        return false;
     }
 }

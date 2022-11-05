@@ -1,5 +1,6 @@
-package ca.rttv.ecosystemic.mixin;
+package ca.rttv.ecosystemic.mixin.net.minecraft.entity.ai.goal;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -18,11 +19,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EatGrassGoal.class)
-abstract class EatGrassGoalMixin {
+public abstract class EatGrassGoalMixin {
     @Shadow
     @Final
     private MobEntity mob;
@@ -31,9 +31,9 @@ abstract class EatGrassGoalMixin {
     @Final
     private World world;
 
-    @Redirect(method = "canStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;isOf(Lnet/minecraft/block/Block;)Z", ordinal = 0)) // todo, change with mixin
-    private boolean isOf(BlockState self, Block block) {
-        return Block.isShapeFullCube(self.getCollisionShape(world, mob.getBlockPos().down()));
+    @ModifyExpressionValue(method = "canStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;isOf(Lnet/minecraft/block/Block;)Z", ordinal = 0))
+    private boolean isOf(boolean value) {
+        return value || Block.isShapeFullCube(world.getBlockState(mob.getBlockPos().down()).getCollisionShape(world, mob.getBlockPos().down()));
     }
 
     @Inject(method = "tick", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 2), cancellable = true)
@@ -43,7 +43,7 @@ abstract class EatGrassGoalMixin {
          // ^^ do I like this block
          || world.getFluidState(mob.getBlockPos().down()).isOf(Fluids.WATER) // is there water below me
          || world.getFluidState(mob.getBlockPos()).isOf(Fluids.WATER) // am I in water?
-         || world.isAir(mob.getBlockPos())) // am I floating (ie, i jumped)
+         || world.isAir(mob.getBlockPos().down())) // am I floating (ie, i jumped)
         {
             // why grass here?
             // why not grass here?
@@ -60,9 +60,9 @@ abstract class EatGrassGoalMixin {
         ci.cancel();
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;isOf(Lnet/minecraft/block/Block;)Z")) // todo, change with mixin extras to be a `condition || our lengthy stuff`
-    private boolean tick(BlockState instance, Block block) {
-        return mob instanceof PathAwareEntity pathAwareEntity && pathAwareEntity.getPathfindingFavor(mob.getBlockPos()) > 0.0f && pathAwareEntity.getPathfindingFavor(mob.getBlockPos()) != world.m_jwglzkvy(mob.getBlockPos());
+    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;isOf(Lnet/minecraft/block/Block;)Z"))
+    private boolean tick(boolean value) {
+        return value || mob instanceof PathAwareEntity pathAwareEntity && pathAwareEntity.getPathfindingFavor(mob.getBlockPos()) > 0.0f && pathAwareEntity.getPathfindingFavor(mob.getBlockPos()) != world.m_jwglzkvy(mob.getBlockPos());
     }
 
     @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;getRawIdFromState(Lnet/minecraft/block/BlockState;)I"))

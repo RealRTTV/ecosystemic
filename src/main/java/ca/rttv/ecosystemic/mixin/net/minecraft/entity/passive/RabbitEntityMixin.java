@@ -1,4 +1,4 @@
-package ca.rttv.ecosystemic.mixin;
+package ca.rttv.ecosystemic.mixin.net.minecraft.entity.passive;
 
 import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
 import net.minecraft.client.model.ModelPart;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(RabbitEntity.class)
-abstract class RabbitEntityMixin extends AnimalEntity implements AnimalEntityDuck {
+public abstract class RabbitEntityMixin extends AnimalEntity implements AnimalEntityDuck {
     protected RabbitEntityMixin(EntityType<? extends AnimalEntity> entityType, World world) {
         super(entityType, world);
     }

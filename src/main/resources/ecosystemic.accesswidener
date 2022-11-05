@@ -15,6 +15,10 @@ accessible field net/minecraft/client/render/entity/model/RabbitEntityModel    h
 accessible field net/minecraft/client/render/entity/model/RabbitEntityModel    nose          Lnet/minecraft/client/model/ModelPart;
 accessible field net/minecraft/client/render/entity/model/RabbitEntityModel    leftEar       Lnet/minecraft/client/model/ModelPart;
 accessible field net/minecraft/client/render/entity/model/RabbitEntityModel    rightEar      Lnet/minecraft/client/model/ModelPart;
+accessible field net/minecraft/client/render/entity/model/HorseEntityModel     head          Lnet/minecraft/client/model/ModelPart;
+accessible field net/minecraft/world/GameRules                                 RULE_TYPES    Ljava/util/Map;
 
-# [access] method [class]                                  [name] [descriptor]
-accessible method net/minecraft/entity/effect/StatusEffect <init> (Lnet/minecraft/entity/effect/StatusEffectType;I)V
+# [access] method [class]                                  [name]            [descriptor]
+accessible method net/minecraft/entity/effect/StatusEffect <init>            (Lnet/minecraft/entity/effect/StatusEffectType;I)V
+accessible method net/minecraft/entity/Entity              getRotationVector (FF)Lnet/minecraft/util/math/Vec3d;
+accessible method net/minecraft/world/GameRules$IntRule    create            (I)Lnet/minecraft/world/GameRules$Type;

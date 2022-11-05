@@ -1,4 +1,4 @@
-package ca.rttv.ecosystemic.mixin;
+package ca.rttv.ecosystemic.mixin.net.minecraft.entity.passive;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.mob.PathAwareEntity;
@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PassiveEntity.class)
-abstract class PassiveEntityMixin extends PathAwareEntity {
+public abstract class PassiveEntityMixin extends PathAwareEntity {
     protected PassiveEntityMixin(EntityType<? extends PathAwareEntity> entityType, World world) {
         super(entityType, world);
     }

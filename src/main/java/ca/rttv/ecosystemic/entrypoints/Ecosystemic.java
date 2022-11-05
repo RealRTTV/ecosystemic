@@ -1,4 +1,4 @@
-package ca.rttv.ecosystemic;
+package ca.rttv.ecosystemic.entrypoints;
 
 import ca.rttv.ecosystemic.network.packet.s2c.play.ResetWaterTimerS2CPacket;
 import ca.rttv.ecosystemic.network.packet.s2c.play.VisitedSpaceCountS2CPacket;
@@ -10,6 +10,8 @@ import org.quiltmc.qsl.networking.api.client.ClientPlayNetworking;
 public class Ecosystemic implements ModInitializer {
     // todo, add config option for cow milk replenish if a mod already adds it and these two conflict
     // todo, add config option for sheep wool replenish if a mod already adds it and these two conflict
+
+    // todo, chickens lay eggs based on a 24000 tick timer, which can be sped up by drinking water and sleeping
 	@Override
 	public void onInitialize(ModContainer mod) {
         ClientPlayNetworking.registerGlobalReceiver(new Identifier("ecosystemic", "visitedspacecounts2cpacket"), (client, handler, buf, response) -> new VisitedSpaceCountS2CPacket(buf).apply(handler));

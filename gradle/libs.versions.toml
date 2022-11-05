@@ -6,6 +6,7 @@ quilt_loader = "0.17.4"
 
 qsl = "3.0.0-beta.14+1.19.2"
 isnrmn = "v1_03"
+mixin_extras = "0.1.0"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
@@ -15,6 +16,7 @@ quilt_loader = { module = "org.quiltmc:quilt-loader", version.ref = "quilt_loade
 qsl_core_base = { module = "org.quiltmc.qsl.core:qsl_base", version.ref = "qsl" }
 qsl_core_networking = { module = "org.quiltmc.qsl.core:networking", version.ref = "qsl" }
 isnrmn = { module = "maven.modrinth:isnrmn", version.ref = "isnrmn" }
+mixin_extras = { module = "com.github.LlamaLad7:MixinExtras", version.ref = "mixin_extras" }
 
 # If you have multiple similar dependencies, you can declare a dependency bundle and reference it on the build script with "libs.bundles.example".
 # [bundles]

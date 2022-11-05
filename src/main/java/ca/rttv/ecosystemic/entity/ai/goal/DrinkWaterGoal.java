@@ -21,7 +21,6 @@ import net.minecraft.world.event.GameEvent;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.function.IntSupplier;
-import java.util.stream.Stream;
 
 public class DrinkWaterGoal extends Goal {
     private final AnimalEntity mob;
@@ -41,8 +40,24 @@ public class DrinkWaterGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        if (mob.getRandom().nextInt(this.mob.isBaby() ? 50 : 500) == 0) {
-            return getWaterPos().isPresent();
+        if (mob.getRandom().nextInt(this.mob.isBaby() ? 200 : 2000) == 0) {
+            if (getWaterPos().isPresent()) {
+                return true;
+            } else {
+                IntSupplier waterBlocks = SupplierUtil.drinkableWaterBlocks(duck, mob);
+                if (world instanceof ServerWorld serverWorld && world.random.nextInt(1) == 0 && waterBlocks.getAsInt() < 1) {
+                    Vec3d vec = mob.getPos().add(mob.getRotationVector(mob.getPitch(), mob.headYaw)).add(0.0d, 0.3d, 0.0d);
+                    serverWorld.spawnParticles(ParticleTypes.FALLING_WATER,
+                            vec.x,
+                            vec.y,
+                            vec.z,
+                            24,
+                            0.1d,
+                            0.05d,
+                            0.1d,
+                            0.1d);
+                }
+            }
         }
         return false;
     }
@@ -78,19 +93,7 @@ public class DrinkWaterGoal extends Goal {
     public void tick() {
         timer = Math.max(0, timer - 1);
         if (timer == getTickCount(4) && waterPos.isPresent()) {
-            IntSupplier drinkableWaterBlocks = SupplierUtil.memoize(() ->
-                    (int) duck.ecosystemic$visitedSpaces()
-                              .stream()
-                              .flatMap(space -> Stream.of(
-                                  space.add(1, -1, 0),
-                                  space.add(-1, -1, 0),
-                                  space.add(0, -1, 1),
-                                  space.add(0, -1, -1)
-                              ))
-                              .distinct()
-                              .map(pos -> world.getFluidState(pos).isOf(Fluids.WATER) && world.getFluidState(pos.up()).isEmpty() && world.getBlockState(pos.up()).getCollisionShape(world, pos).isEmpty())
-                              .count()
-            );
+            IntSupplier drinkableWaterBlocks = SupplierUtil.drinkableWaterBlocks(duck, mob);
             mob.emitGameEvent(GameEvent.DRINK);
             if (mob.isBaby()) {
                 mob.growUp(60);
@@ -98,7 +101,7 @@ public class DrinkWaterGoal extends Goal {
             duck.ecosystemic$onDrinkWater(drinkableWaterBlocks);
         }
         if (timer / 2 < 7 && timer % 2 == 0 && world instanceof ServerWorld serverWorld) {
-            Vec3d vec = mob.getPos().add(mob.getRotationVector());
+            Vec3d vec = mob.getPos().add(mob.getRotationVector(mob.getPitch(), mob.headYaw));
             serverWorld.spawnParticles(ParticleTypes.WATER_SPLASH,
                     vec.x,
                     vec.y,

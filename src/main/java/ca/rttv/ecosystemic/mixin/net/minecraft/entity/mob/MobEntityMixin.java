@@ -1,5 +1,6 @@
-package ca.rttv.ecosystemic.mixin;
+package ca.rttv.ecosystemic.mixin.net.minecraft.entity.mob;
 
+import ca.rttv.ecosystemic.mixin.net.minecraft.entity.LivingEntityMixin;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.GoalSelector;
@@ -14,13 +15,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MobEntity.class)
-abstract class MobEntityMixin extends LivingEntityMixin {
+public abstract class MobEntityMixin extends LivingEntityMixin {
     @Shadow
     @Final
     protected GoalSelector goalSelector;
-
-    @Shadow
-    public native EntityNavigation getNavigation();
 
     protected MobEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);

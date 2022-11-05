@@ -17,7 +17,8 @@
 		},
 		"intermediate_mappings": "net.fabricmc:intermediary",
 		"entrypoints": {
-			"init": "ca.rttv.ecosystemic.Ecosystemic"
+			"init": "ca.rttv.ecosystemic.entrypoints.Ecosystemic",
+			"pre_launch": "ca.rttv.ecosystemic.entrypoints.PreLaunch"
 		},
 		"depends": [
 			{

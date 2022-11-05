@@ -1,6 +1,7 @@
-package ca.rttv.ecosystemic.mixin;
+package ca.rttv.ecosystemic.mixin.net.minecraft.entity.passive;
 
 import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.CowEntityModel;
 import net.minecraft.client.render.entity.model.EntityModel;
@@ -17,7 +18,6 @@ import org.spongepowered.asm.mixin.SoftOverride;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.function.IntSupplier;
 
 @Mixin(CowEntity.class)
-abstract class CowEntityMixin extends PassiveEntityMixin implements AnimalEntityDuck {
+public abstract class CowEntityMixin extends PassiveEntityMixin implements AnimalEntityDuck {
     protected CowEntityMixin(EntityType<? extends PassiveEntity> entityType, World world) {
         super(entityType, world);
     }
@@ -59,11 +59,10 @@ abstract class CowEntityMixin extends PassiveEntityMixin implements AnimalEntity
         replenishTicks = nbt.getInt("ReplenishTicks");
     }
 
-    // todo, mixin extras modify expression value
     // todo, de-sync with server and client
-    @Redirect(method = "interactMob", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/CowEntity;isBaby()Z"))
-    private boolean interactMob(CowEntity instance) {
-        return instance.isBaby() || replenishTicks < 24000;
+    @ModifyExpressionValue(method = "interactMob", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/CowEntity;isBaby()Z"))
+    private boolean interactMob(boolean original) {
+        return original || replenishTicks < 24000;
     }
 
     @Inject(method = "interactMob", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setStackInHand(Lnet/minecraft/util/Hand;Lnet/minecraft/item/ItemStack;)V"))
@@ -89,5 +88,10 @@ abstract class CowEntityMixin extends PassiveEntityMixin implements AnimalEntity
     @Override
     public float ecosystemic$neckMultiplier() {
         return 9.0f;
+    }
+
+    @Override
+    public void ecosystemic$addSleepingTicks(int count) {
+        replenishTicks = Math.min(24000, replenishTicks + count);
     }
 }

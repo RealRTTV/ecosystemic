@@ -1,4 +1,4 @@
-package ca.rttv.ecosystemic.mixin;
+package ca.rttv.ecosystemic.mixin.net.minecraft.client.network;
 
 import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
 import ca.rttv.ecosystemic.duck.EcosystemicClientPlayPacketListener;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @SuppressWarnings("unused")
 @Mixin(ClientPlayNetworkHandler.class)
-final class ClientPlayerNetworkHandlerMixin implements EcosystemicClientPlayPacketListener {
+public abstract class ClientPlayNetworkHandlerMixin implements EcosystemicClientPlayPacketListener {
     @Shadow
     private ClientWorld world;
 
@@ -24,9 +24,10 @@ final class ClientPlayerNetworkHandlerMixin implements EcosystemicClientPlayPack
 
     @Override
     public void ecosystemic$onVisitedSpaceCount(VisitedSpaceCountS2CPacket packet) {
-        client.execute(() -> WorldUtils.getClientEntityByUuid(world, packet.uuid()).ifPresent(entity -> {
-            if (entity instanceof AnimalEntityDuck duck) {
-                duck.ecosystemic$visitedSpaceCount(packet.count());
+        client.execute(() -> packet.forEach((uuid, count) -> {
+            AnimalEntityDuck duck = (AnimalEntityDuck) client.world.entityManager.getLookup().get(uuid);
+            if (duck != null) {
+                duck.ecosystemic$visitedSpaceCount(count);
             }
         }));
     }
