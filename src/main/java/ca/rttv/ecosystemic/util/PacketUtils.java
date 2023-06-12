@@ -2,9 +2,9 @@ package ca.rttv.ecosystemic.util;
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -18,7 +18,7 @@ public class PacketUtils {
      * @param packet the packet to send to the clients
      */
     public static void sendPacketToPlayers(ServerWorld world, BlockPos pos, Packet<ClientPlayPacketListener> packet) {
-        world.getPlayers(player -> player.getBlockPos().isWithinDistance(pos, 128)).forEach(player -> player.networkHandler.sendPacket(packet));
+        world.getMatchingPlayers(player -> player.getBlockPos().isWithinDistance(pos, 128)).forEach(player -> player.networkHandler.sendPacket(packet));
     }
 
     /**
@@ -31,6 +31,6 @@ public class PacketUtils {
     public static void sendPacketToPlayers(ServerWorld world, BlockPos pos, Identifier channel, Packet<ClientPlayPacketListener> packet) {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
         packet.write(buf);
-        ServerPlayNetworking.send(world.getPlayers(player -> player.getBlockPos().isWithinDistance(pos, 128)), channel, buf);
+        ServerPlayNetworking.send(world.getMatchingPlayers(player -> player.getBlockPos().isWithinDistance(pos, 128)), channel, buf);
     }
 }

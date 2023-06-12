@@ -39,7 +39,7 @@ public abstract class EatGrassGoalMixin {
     @Inject(method = "tick", at = @At(value = "JUMP", opcode = Opcodes.IFEQ, ordinal = 2), cancellable = true)
     private void tick(CallbackInfo ci) {
         if (world.getBlockState(mob.getBlockPos().down()).isOf(Blocks.DIRT) // is dirt
-         || mob instanceof PathAwareEntity pathAwareEntity && pathAwareEntity.getPathfindingFavor(mob.getBlockPos().down()) > 0.0f && pathAwareEntity.getPathfindingFavor(mob.getBlockPos().down()) != world.m_jwglzkvy(mob.getBlockPos().down())
+         || mob instanceof PathAwareEntity pathAwareEntity && pathAwareEntity.getPathfindingFavor(mob.getBlockPos().down()) > 0.0f && pathAwareEntity.getPathfindingFavor(mob.getBlockPos().down()) != world.method_42309(mob.getBlockPos().down())
          // ^^ do I like this block
          || world.getFluidState(mob.getBlockPos().down()).isOf(Fluids.WATER) // is there water below me
          || world.getFluidState(mob.getBlockPos()).isOf(Fluids.WATER) // am I in water?
@@ -62,7 +62,7 @@ public abstract class EatGrassGoalMixin {
 
     @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;isOf(Lnet/minecraft/block/Block;)Z"))
     private boolean tick(boolean value) {
-        return value || mob instanceof PathAwareEntity pathAwareEntity && pathAwareEntity.getPathfindingFavor(mob.getBlockPos()) > 0.0f && pathAwareEntity.getPathfindingFavor(mob.getBlockPos()) != world.m_jwglzkvy(mob.getBlockPos());
+        return value || mob instanceof PathAwareEntity pathAwareEntity && pathAwareEntity.getPathfindingFavor(mob.getBlockPos()) > 0.0f && pathAwareEntity.getPathfindingFavor(mob.getBlockPos()) != world.method_42309(mob.getBlockPos());
     }
 
     @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;getRawIdFromState(Lnet/minecraft/block/BlockState;)I"))

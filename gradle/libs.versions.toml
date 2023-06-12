@@ -1,10 +1,10 @@
 [versions]
 # The latest versions are available at https://lambdaurora.dev/tools/import_quilt.html
-minecraft = "1.19.2"
-quilt_mappings = "1.19.2+build.1"
-quilt_loader = "0.17.4"
+minecraft = "1.20.1-rc1"
+quilt_mappings = "1.20.1-rc1+build.1"
+quilt_loader = "0.19.0-beta.18"
 
-qsl = "3.0.0-beta.14+1.19.2"
+qsl = "6.0.2-alpha.2+1.20.1-rc1"
 isnrmn = "v1_03"
 mixin_extras = "0.1.0"
 
@@ -23,4 +23,4 @@ mixin_extras = { module = "com.github.LlamaLad7:MixinExtras", version.ref = "mix
 # example = ["example-a", "example-b", "example-c"]
 
 [plugins]
-quilt_loom = { id = "org.quiltmc.loom", version = "0.12.+" }
+quilt_loom = { id = "org.quiltmc.loom", version = "1.1.+" }

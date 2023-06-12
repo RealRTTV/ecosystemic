@@ -24,6 +24,6 @@ public class LookAtSkyGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        return !mob.world.isSkyVisible(mob.getBlockPos()) && !mob.world.isRaining() && duck.ecosystemic$ticksWithSkylight() < 3000;
+        return !mob.getWorld().isSkyVisible(mob.getBlockPos()) && !mob.getWorld().isRaining() && duck.ecosystemic$ticksWithSkylight() < 3000;
     }
 }

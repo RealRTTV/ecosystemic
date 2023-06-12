@@ -32,7 +32,7 @@ public class DrinkWaterGoal extends Goal {
     public DrinkWaterGoal(AnimalEntity mob, AnimalEntityDuck duck) {
         this.mob = mob;
         this.duck = duck;
-        world = mob.world;
+        world = mob.getWorld();
         timer = 40;
         waterPos = Optional.empty();
         setControls(EnumSet.of(Control.MOVE, Control.LOOK, Control.JUMP));

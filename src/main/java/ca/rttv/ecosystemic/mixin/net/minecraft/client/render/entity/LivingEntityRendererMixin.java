@@ -6,7 +6,7 @@ import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.Vec3f;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -30,14 +30,14 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
 
     @ModifyArgs(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "net/minecraft/client/render/entity/model/EntityModel.render(Lnet/minecraft/client/util/math/MatrixStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;IIFFFF)V"))
     private void ecosystemic$changeRenderTint(Args args, T livingEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
-        Vec3f colors = livingEntity instanceof AnimalEntityDuck duck && duck.ecosystemic$visitedSpaceCount() < 12
-                ? new Vec3f(RED_VISITED_SPACES[duck.ecosystemic$visitedSpaceCount()] / 255.0f,
+        Vector3f colors = livingEntity instanceof AnimalEntityDuck duck && duck.ecosystemic$visitedSpaceCount() < 12
+                ? new Vector3f(RED_VISITED_SPACES[duck.ecosystemic$visitedSpaceCount()] / 255.0f,
                             GREEN_VISITED_SPACES[duck.ecosystemic$visitedSpaceCount()] / 255.0f,
                             BLUE_VISITED_SPACES[duck.ecosystemic$visitedSpaceCount()] / 255.0f)
-                : new Vec3f(1.0f, 1.0f, 1.0f);
-        args.set(4, colors.getX());
-        args.set(5, colors.getY());
-        args.set(6, colors.getZ());
+                : new Vector3f(1.0f, 1.0f, 1.0f);
+        args.set(4, colors.x);
+        args.set(5, colors.y);
+        args.set(6, colors.z);
     }
 
     @Inject(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;animateModel(Lnet/minecraft/entity/Entity;FFF)V", shift = At.Shift.AFTER))

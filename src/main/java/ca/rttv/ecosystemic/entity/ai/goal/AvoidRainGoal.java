@@ -15,7 +15,7 @@ public class AvoidRainGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        return this.mob.world.isRaining() && mob.world.getBiome(mob.getBlockPos()).value().getPrecipitation() != Biome.Precipitation.NONE && NavigationConditions.hasMobNavigation(this.mob);
+        return this.mob.getWorld().isRaining() && mob.getWorld().getBiome(mob.getBlockPos()).value().getPrecipitationAt(mob.getBlockPos()) != Biome.Precipitation.NONE && NavigationConditions.hasMobNavigation(this.mob);
     }
 
     @Override

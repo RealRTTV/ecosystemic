@@ -1,10 +1,9 @@
 package ca.rttv.ecosystemic.duck;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.util.math.BlockPos;
+import org.quiltmc.loader.api.minecraft.ClientOnly;
 
 import java.util.List;
 import java.util.Set;
@@ -12,10 +11,10 @@ import java.util.function.IntSupplier;
 
 public interface AnimalEntityDuck {
 
-    @Environment(EnvType.CLIENT)
+    @ClientOnly
     void ecosystemic$visitedSpaceCount(int count);
 
-    @Environment(EnvType.CLIENT)
+    @ClientOnly
     int ecosystemic$visitedSpaceCount();
 
     int ecosystemic$ticksWithSkylight();

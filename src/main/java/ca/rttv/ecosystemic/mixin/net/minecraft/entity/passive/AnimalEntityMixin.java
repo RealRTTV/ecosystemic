@@ -7,8 +7,6 @@ import ca.rttv.ecosystemic.entity.ai.goal.EscapeRainGoal;
 import ca.rttv.ecosystemic.entity.ai.goal.LookAtSkyGoal;
 import ca.rttv.ecosystemic.mixin.net.minecraft.entity.mob.MobEntityMixin;
 import ca.rttv.ecosystemic.registry.GameRulesRegistry;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.EatGrassGoal;
 import net.minecraft.entity.mob.MobEntity;
@@ -25,6 +23,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldView;
 import org.jetbrains.annotations.Nullable;
+import org.quiltmc.loader.api.minecraft.ClientOnly;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.SoftOverride;
@@ -45,7 +44,7 @@ public abstract class AnimalEntityMixin extends MobEntityMixin {
     @Unique
     private final Set<BlockPos> visitedSpaces = new HashSet<>(64);
     @Unique
-    @Environment(EnvType.CLIENT)
+    @ClientOnly
     private int visitedSpaceCount;
     @Unique
     private int ticksWithSkylight;
@@ -140,13 +139,13 @@ public abstract class AnimalEntityMixin extends MobEntityMixin {
             return;
         }
 
-        if (!world.isClient) {
-            if (world.isDay()) {
-                ticksWithSkylight += world.isSkyVisible(getBlockPos()) ? 1 : -1;
+        if (!getWorld().isClient) {
+            if (getWorld().isDay()) {
+                ticksWithSkylight += getWorld().isSkyVisible(getBlockPos()) ? 1 : -1;
             }
         } else {
             if (duck.ecosystemic$visitedSpaceCount() < 12 && getRandom().nextInt(10) == 0) {
-                world.addParticle(
+                getWorld().addParticle(
                         ParticleTypes.SNEEZE,
                         getX() - (double) (getWidth() + 1.0f) * 0.5 * (double) MathHelper.sin(headYaw * MathHelper.RADIANS_PER_DEGREE),
                         getEyeY() - 0.1f,
@@ -170,7 +169,7 @@ public abstract class AnimalEntityMixin extends MobEntityMixin {
         }
 
         ticksExisting++;
-        if (!world.isClient && ticksExisting % world.getGameRules().getInt(GameRulesRegistry.ECOSYSTEMIC_VISITABLE_SPACES_CALCULATE_INTERVAL) == 0) { // todo gamerule for value
+        if (!getWorld().isClient && ticksExisting % getWorld().getGameRules().getInt(GameRulesRegistry.ECOSYSTEMIC_VISITABLE_SPACES_CALCULATE_INTERVAL) == 0) { // todo gamerule for value
             ecosystemic$calculateVisitedSpaces();
         }
     }
@@ -190,7 +189,7 @@ public abstract class AnimalEntityMixin extends MobEntityMixin {
 
     @Inject(method = "lovePlayer", at = @At("HEAD"), cancellable = true)
     private void lovePlayer(PlayerEntity player, CallbackInfo ci) {
-        if (!(world instanceof ServerWorld serverWorld)) {
+        if (!(getWorld() instanceof ServerWorld serverWorld)) {
             return;
         }
 
@@ -240,7 +239,7 @@ public abstract class AnimalEntityMixin extends MobEntityMixin {
         stack.add(getBlockPos());
         while (visitedSpaces.size() < 64 && stack.size() > 0) {
             BlockPos pos = stack.remove(0);
-            if (getPathfindingFavor(pos, world) > world.m_jwglzkvy(pos) && world.isAir(pos) && getPathfindingFavor(pos, world) != 0) {
+            if (getPathfindingFavor(pos, getWorld()) > getWorld().method_42309(pos) && getWorld().isAir(pos) && getPathfindingFavor(pos, getWorld()) != 0) {
                 visitedSpaces.add(pos);
                 for (BlockPos offset : offsets) {
                     if (!visitedSpaces.contains(pos.add(offset)) && !stack.contains(pos.add(offset))) {
@@ -258,7 +257,7 @@ public abstract class AnimalEntityMixin extends MobEntityMixin {
 
     @SoftOverride
     protected void ecosystemic$onEatingGrassTail(CallbackInfo ci) {
-        lovePlayer(world.getClosestPlayer(this, 32));
+        lovePlayer(getWorld().getClosestPlayer(this, 32));
     }
 
     @SuppressWarnings("unused")

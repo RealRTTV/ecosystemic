@@ -1,7 +1,7 @@
 package ca.rttv.ecosystemic.network.packet.s2c.play;
 
 import ca.rttv.ecosystemic.duck.EcosystemicClientPlayPacketListener;
-import net.minecraft.network.Packet;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 

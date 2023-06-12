@@ -20,13 +20,13 @@ public class EscapeRainGoal extends Goal {
 
     public EscapeRainGoal(PathAwareEntity mob) {
         this.mob = mob;
-        world = mob.world;
+        world = mob.getWorld();
         setControls(EnumSet.of(Goal.Control.MOVE));
     }
 
     @Override
     public boolean canStart() {
-        return world.isRaining() && world.isSkyVisible(mob.getBlockPos()) && world.getBiome(mob.getBlockPos()).value().getPrecipitation() != Biome.Precipitation.NONE && targetShelterPos();
+        return world.isRaining() && world.isSkyVisible(mob.getBlockPos()) && world.getBiome(mob.getBlockPos()).value().getPrecipitationAt(mob.getBlockPos()) != Biome.Precipitation.NONE && targetShelterPos();
     }
 
     protected boolean targetShelterPos() {

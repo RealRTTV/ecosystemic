@@ -23,7 +23,7 @@ public class SupplierUtil {
                                 space.add(0, -1, -1)
                         ))
                         .distinct()
-                        .filter(pos -> entity.world.getFluidState(pos).isOf(Fluids.WATER) && entity.world.getFluidState(pos.up()).isEmpty() && entity.world.getBlockState(pos.up()).getCollisionShape(entity.world, pos).isEmpty())
+                        .filter(pos -> entity.getWorld().getFluidState(pos).isOf(Fluids.WATER) && entity.getWorld().getFluidState(pos.up()).isEmpty() && entity.getWorld().getBlockState(pos.up()).getCollisionShape(entity.getWorld(), pos).isEmpty())
                         .count()
         );
     }

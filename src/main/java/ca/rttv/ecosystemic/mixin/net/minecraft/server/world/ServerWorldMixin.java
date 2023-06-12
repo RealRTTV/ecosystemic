@@ -13,8 +13,8 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.world.EntityList;
+import net.minecraft.world.ServerWorldProperties;
 import net.minecraft.world.World;
-import net.minecraft.world.level.ServerWorldProperties;
 import org.quiltmc.qsl.networking.api.ServerPlayNetworking;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,10 +30,6 @@ import java.util.function.Predicate;
 @Mixin(ServerWorld.class)
 public abstract class ServerWorldMixin {
     @Shadow
-    @Final
-    private ServerWorldProperties worldProperties;
-
-    @Shadow
     public native <T extends Entity> List<? extends T> getEntitiesByType(TypeFilter<Entity, T> typeFilter, Predicate<? super T> predicate);
 
     @Shadow
@@ -47,6 +43,10 @@ public abstract class ServerWorldMixin {
     @Shadow
     @Final
     List<ServerPlayerEntity> players;
+
+    @Shadow
+    @Final
+    private ServerWorldProperties worldProperties;
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setTimeOfDay(J)V"))
     private void sleeping(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
