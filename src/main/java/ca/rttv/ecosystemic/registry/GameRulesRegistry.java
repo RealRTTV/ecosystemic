@@ -4,7 +4,6 @@ import net.minecraft.world.GameRules;
 
 public class GameRulesRegistry {
     public static final GameRules.Key<GameRules.IntRule> ECOSYSTEMIC_VISITABLE_SPACES_CALCULATE_INTERVAL = register("ecosystemicVisitableSpacesCalculateInterval", GameRules.Category.MOBS, GameRules.IntRule.create(200));
-    public static final GameRules.Key<GameRules.IntRule> ECOSYSTEMIC_VISITABLE_SPACES_PACKET_INTERVAL = register("ecosystemicVisitableSpacesPacketInterval", GameRules.Category.MOBS, GameRules.IntRule.create(40));
 
     public static void init() {}
 

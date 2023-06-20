@@ -1,88 +1,52 @@
 package ca.rttv.ecosystemic.entity.ai.goal;
 
-import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
-import ca.rttv.ecosystemic.network.packet.s2c.play.ResetWaterTimerS2CPacket;
+import ca.rttv.ecosystemic.Nibble;
+import ca.rttv.ecosystemic.duck.WaterDesireDuck;
+import ca.rttv.ecosystemic.network.packet.s2c.play.ResetConsumingTimerS2CPacket;
 import ca.rttv.ecosystemic.util.PacketUtils;
-import ca.rttv.ecosystemic.util.SupplierUtil;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
+import net.minecraft.entity.EntityStatuses;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.IntSupplier;
 
 public class DrinkWaterGoal extends Goal {
-    private final AnimalEntity mob;
-    private final AnimalEntityDuck duck;
+    private final PathAwareEntity mob;
+    private final WaterDesireDuck duck;
     private final World world;
-    private Optional<BlockPos> waterPos;
+    @Nullable
+    private BlockPos waterPos;
+    @Nullable
+    private BlockPos targetPos;
     private int timer;
+    private boolean canNavigate;
 
-    public DrinkWaterGoal(AnimalEntity mob, AnimalEntityDuck duck) {
-        this.mob = mob;
+    public DrinkWaterGoal(PathAwareEntity entity, WaterDesireDuck duck) {
+        mob = entity;
         this.duck = duck;
-        world = mob.getWorld();
-        timer = 40;
-        waterPos = Optional.empty();
-        setControls(EnumSet.of(Control.MOVE, Control.LOOK, Control.JUMP));
-    }
-
-    @Override
-    public boolean canStart() {
-        if (mob.getRandom().nextInt(this.mob.isBaby() ? 200 : 2000) == 0) {
-            if (getWaterPos().isPresent()) {
-                return true;
-            } else {
-                IntSupplier waterBlocks = SupplierUtil.drinkableWaterBlocks(duck, mob);
-                if (world instanceof ServerWorld serverWorld && world.random.nextInt(1) == 0 && waterBlocks.getAsInt() < 1) {
-                    Vec3d vec = mob.getPos().add(mob.getRotationVector(mob.getPitch(), mob.headYaw)).add(0.0d, 0.3d, 0.0d);
-                    serverWorld.spawnParticles(ParticleTypes.FALLING_WATER,
-                            vec.x,
-                            vec.y,
-                            vec.z,
-                            24,
-                            0.1d,
-                            0.05d,
-                            0.1d,
-                            0.1d);
-                }
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void start() {
-        timer = getTickCount(40);
-        waterPos = getWaterPos();
-        if (world instanceof ServerWorld serverWorld) {
-            PacketUtils.sendPacketToPlayers(serverWorld, mob.getBlockPos(), new Identifier("ecosystemic", "resetwatertimers2cpacket"), new ResetWaterTimerS2CPacket(mob.getUuid()));
-            duck.ecosystemic$waterTimer(40);
-        }
-        mob.getNavigation().stop();
-        mob.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, Vec3d.ofBottomCenter(waterPos.orElseThrow(() -> new RuntimeException("Previously confirmed that water was nearby, but now it isn't?!?!"))));
-    }
-
-    @Override
-    public void stop() {
+        world = entity.getWorld();
+        targetPos = null;
         timer = 0;
-        waterPos = Optional.empty();
-    }
-
-    @Override
-    public boolean shouldContinue() {
-        return timer > 0;
+        canNavigate = true;
+        setControls(EnumSet.of(Control.MOVE, Control.LOOK, Control.JUMP));
     }
 
     public int timer() {
@@ -90,44 +54,98 @@ public class DrinkWaterGoal extends Goal {
     }
 
     @Override
-    public void tick() {
-        timer = Math.max(0, timer - 1);
-        if (timer == getTickCount(4) && waterPos.isPresent()) {
-            IntSupplier drinkableWaterBlocks = SupplierUtil.drinkableWaterBlocks(duck, mob);
-            mob.emitGameEvent(GameEvent.DRINK);
-            if (mob.isBaby()) {
-                mob.growUp(60);
-            }
-            duck.ecosystemic$onDrinkWater(drinkableWaterBlocks);
+    public boolean canStart() {
+        if (mob.getRandom().nextInt(mob.isBaby() ? 100 : 1000) > 0) {
+            return false;
         }
-        if (timer / 2 < 7 && timer % 2 == 0 && world instanceof ServerWorld serverWorld) {
-            Vec3d vec = mob.getPos().add(mob.getRotationVector(mob.getPitch(), mob.headYaw));
-            serverWorld.spawnParticles(ParticleTypes.WATER_SPLASH,
-                    vec.x,
-                    vec.y,
-                    vec.z,
-                    16,
-                    0.2d,
-                    0.1d,
-                    0.2d,
-                    0.02d);
 
-            world.playSoundFromEntity(null, mob, SoundEvents.ENTITY_GENERIC_DRINK, SoundCategory.NEUTRAL, 0.7f, 0.8f + world.random.nextFloat() * 0.4f);
+        Optional<Pair<BlockPos, BlockPos>> pair = duck.ecosystemic$pen().stream().map(pos -> {
+            if (world.getFluidState(pos.down().north()).isOf(Fluids.WATER) && !world.getBlockState(pos.north()).isSolid()) {
+                return new Pair<>(pos, pos.north().down());
+            } else if (world.getFluidState(pos.down().east()).isOf(Fluids.WATER) && !world.getBlockState(pos.east()).isSolid()) {
+                return new Pair<>(pos, pos.east().down());
+            } else if (world.getFluidState(pos.down().south()).isOf(Fluids.WATER) && !world.getBlockState(pos.south()).isSolid()) {
+                return new Pair<>(pos, pos.south().down());
+            } else if (world.getFluidState(pos.down().west()).isOf(Fluids.WATER) && !world.getBlockState(pos.west()).isSolid()) {
+                return new Pair<>(pos, pos.west().down());
+            } else {
+                return null;
+            }
+        }).filter(Objects::nonNull).min(Comparator.comparingDouble(x -> Vec3d.ofBottomCenter(x.getLeft()).squaredDistanceTo(mob.getPos())));
+        if (pair.isPresent()) {
+            targetPos = pair.get().getLeft();
+            waterPos = pair.get().getRight();
+        } else if (world.getFluidState(mob.getBlockPos()).isOf(Fluids.WATER)) {
+            targetPos = mob.getBlockPos();
+            waterPos = mob.getBlockPos();
+        }
+        return true;
+    }
+
+    @Override
+    public void tick() {
+        if (mob.getNavigation().getCurrentPath() != null && mob.getNavigation().getCurrentPath().isFinished()) {
+            if (timer == getTickCount(40) && world instanceof ServerWorld serverWorld) {
+                PacketUtils.sendPacketToPlayers(serverWorld, mob.getBlockPos(), new Identifier("ecosystemic", "resetconsumingtimers2cpacket"), new ResetConsumingTimerS2CPacket(mob.getUuid(), getTickCount(40), Nibble.WATER));
+                duck.ecosystemic$timer(40, Nibble.WATER);
+            }
+            if (targetPos != null && waterPos != null && world.getFluidState(waterPos).isOf(Fluids.WATER)) {
+                mob.getLookControl().lookAt(waterPos.getX() + 0.5d, waterPos.getY() + 1.0d, waterPos.getZ() + 0.5d, 1.0f, 1.0f);
+                if (timer % 3 == 0 && world instanceof ServerWorld serverWorld) {
+                    serverWorld.playSoundFromEntity(null, mob, SoundEvents.ENTITY_GENERIC_DRINK, SoundCategory.NEUTRAL, 0.5f, world.random.nextFloat() * 0.1f + 0.9f);
+                }
+                if (timer == getTickCount(4)) {
+                    if (mob.getBlockPos().equals(targetPos)) {
+                        mob.emitGameEvent(GameEvent.DRINK);
+                        if (mob instanceof PassiveEntity passiveEntity && passiveEntity.isBaby()) {
+                            passiveEntity.growUp(60);
+                        }
+                        mob.emitGameEvent(GameEvent.EAT);
+                        duck.ecosystemic$onDrinkWater();
+                        mob.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, waterPos.ofCenter());
+                    }
+                }
+            }
+            if (waterPos != null && world instanceof ServerWorld serverWorld) {
+                serverWorld.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, world.getBlockState(waterPos)), waterPos.getX() + 0.5d, waterPos.getY() + 1.0d, waterPos.getZ() + 0.5d, 1, 0.25d, 0.25d, 0.25d, 0.05d);
+            }
+        } else {
+            if (!canNavigate && timer % getTickCount(20) < 6 && timer % getTickCount(40) == 0 && world instanceof ServerWorld serverWorld) {
+                world.sendEntityStatus(mob, EntityStatuses.ADD_SPLASH_PARTICLES);
+                serverWorld.playSoundFromEntity(null, mob, SoundEvents.ENTITY_PLAYER_SPLASH, SoundCategory.NEUTRAL, 0.5f, world.random.nextFloat() * 0.1f + 0.9f);
+            }
+        }
+
+        timer = Math.max(timer - 1, 0);
+    }
+
+    @Override
+    public void start() {
+        timer = getTickCount(40);
+        if (targetPos != null && waterPos != null) {
+            canNavigate = mob.getNavigation().startMovingTo(targetPos.getX() + 0.5d, targetPos.getY(), targetPos.getZ() + 0.5d, 1.0d);
+        } else {
+            canNavigate = false;
         }
     }
 
-    private Optional<BlockPos> getWaterPos() {
-        BlockPos[] possiblePositions = new BlockPos[4];
-        possiblePositions[0] = mob.getBlockPos().add(1, -1, 0); // Positive X
-        possiblePositions[1] = mob.getBlockPos().add(-1, -1, 0); // Negative X
-        possiblePositions[2] = mob.getBlockPos().add(0, -1, 1); // Positive Z
-        possiblePositions[3] = mob.getBlockPos().add(0, -1, -1); // Negative Z
-        for (BlockPos possible : possiblePositions) {
-            if (world.getFluidState(possible).isOf(Fluids.WATER)) {
-                return Optional.of(possible);
-            }
+    @Override
+    public void stop() {
+        if (timer > 0 && world instanceof ServerWorld serverWorld) {
+            PacketUtils.sendPacketToPlayers(serverWorld, mob.getBlockPos(), new Identifier("ecosystemic", "resetconsumingtimers2cpacket"), new ResetConsumingTimerS2CPacket(mob.getUuid(), 0, Nibble.WATER));
+            duck.ecosystemic$timer(0, Nibble.WATER);
         }
+        timer = 0;
+        duck.ecosystemic$onConsume(canNavigate && targetPos != null, Nibble.WATER);
+        targetPos = null;
+        waterPos = null;
+        mob.getNavigation().stop();
+        canNavigate = true;
+    }
 
-        return Optional.empty();
+    @Override
+    public boolean shouldContinue() {
+        // this is so smart because once the block changes the mob won't be interested anymore, automatic!
+        return targetPos == null || waterPos == null ? timer > 0 : canNavigate && world.getFluidState(waterPos).isOf(Fluids.WATER) && (!mob.getNavigation().isIdle() || mob.getBlockPos().equals(targetPos) && timer > 0);
     }
 }

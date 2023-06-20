@@ -1,6 +1,6 @@
 package ca.rttv.ecosystemic.util;
 
-import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
+import ca.rttv.ecosystemic.duck.WaterDesireDuck;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.fluid.Fluids;
 
@@ -12,9 +12,9 @@ public class SupplierUtil {
         return new MemoizedIntSupplier(inner);
     }
 
-    public static IntSupplier drinkableWaterBlocks(AnimalEntityDuck duck, AnimalEntity entity) {
+    public static IntSupplier drinkableWaterBlocks(WaterDesireDuck duck, AnimalEntity entity) {
         return SupplierUtil.memoize(() ->
-                (int) duck.ecosystemic$visitedSpaces()
+                (int) duck.ecosystemic$pen()
                         .stream()
                         .flatMap(space -> Stream.of(
                                 space.add(1, -1, 0),

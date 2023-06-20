@@ -1,8 +1,6 @@
 package ca.rttv.ecosystemic.mixin.net.minecraft.entity.passive;
 
-import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
-import ca.rttv.ecosystemic.util.SupplierUtil;
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import ca.rttv.ecosystemic.duck.*;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.SheepEntityModel;
@@ -13,6 +11,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,10 +20,9 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.function.IntSupplier;
 
 @Mixin(SheepEntity.class)
-public abstract class SheepEntityMixin extends AnimalEntity implements AnimalEntityDuck {
+public abstract class SheepEntityMixin extends AnimalEntity implements DryDesireDuck, PenDesireDuck, WaterDesireDuck, EatingDesireDuck, LightDesireDuck {
     @Shadow
     public native boolean isSheared();
 
@@ -70,11 +68,11 @@ public abstract class SheepEntityMixin extends AnimalEntity implements AnimalEnt
 
     @Override
     public float ecosystemic$neckMultiplier() {
-        return 9.0f;
+        return isBaby() ? 5.0f : 9.0f;
     }
 
     @ModifyArg(method = "onEatingGrass", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/SheepEntity;growUp(I)V"), index = 0)
-    private int onEatingGrass(int value) {
+    private int onEatingGrass(int value) { // ill do it myself
         return 0;
     }
 
@@ -84,17 +82,35 @@ public abstract class SheepEntityMixin extends AnimalEntity implements AnimalEnt
     }
 
     @Override
-    public void ecosystemic$onDrinkWater(IntSupplier drinkableWaterBlocks) {
-        regrowTicks += (int) (800.0f * ((float) Math.min(12, drinkableWaterBlocks.getAsInt()) / 4.0f));
+    public void ecosystemic$onDrinkWater() {
+        ecosystemic$addSleepingTicks(1800);
     }
 
-    @ModifyExpressionValue(method = "sheared", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/random/RandomGenerator;nextInt(I)I"))
-    private int sheared(int value) {
-        return MathHelper.ceilDiv(Math.min(12, SupplierUtil.drinkableWaterBlocks(this, this).getAsInt()), 4);
-    }
+//    @ModifyExpressionValue(method = "sheared", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/random/RandomGenerator;nextInt(I)I"))
+//    private int sheared(int value) {
+//        return MathHelper.ceilDiv(Math.min(12, SupplierUtil.drinkableWaterBlocks(this, this).getAsInt()), 4);
+//    }
 
     @Override
     public void ecosystemic$addSleepingTicks(int count) {
         regrowTicks = Math.min(24000, regrowTicks + count);
+    }
+
+    /**
+     * @author rsv
+     * @reason if anything modifies this code, there will be a conflict, guaranteed, a crash is the safest bet, and someone can submit a bug report and I can work on integration with the other developer
+     */
+    @Overwrite
+    public float getNeckAngle(float delta) {
+        return ecosystemic$neckAngle(delta);
+    }
+
+    /**
+     * @author rsv
+     * @reason if anything modifies this code, there will be a conflict, guaranteed, a crash is the safest bet, and someone can submit a bug report and I can work on integration with the other developer
+     */
+    @Overwrite
+    public float getHeadAngle(float delta) {
+        return ecosystemic$headAngle(delta);
     }
 }

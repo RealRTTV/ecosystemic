@@ -20,7 +20,7 @@ public class AvoidRainGoal extends Goal {
 
     @Override
     public void start() {
-        ((MobNavigation)this.mob.getNavigation()).setAvoidSunlight(true); // that;s convenient
+        ((MobNavigation)this.mob.getNavigation()).setAvoidSunlight(true); // that's convenient
     }
 
     @Override

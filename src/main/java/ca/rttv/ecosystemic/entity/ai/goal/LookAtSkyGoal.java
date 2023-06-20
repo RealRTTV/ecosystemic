@@ -1,6 +1,6 @@
 package ca.rttv.ecosystemic.entity.ai.goal;
 
-import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
+import ca.rttv.ecosystemic.duck.LightDesireDuck;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.math.MathHelper;
@@ -9,9 +9,9 @@ import java.util.EnumSet;
 
 public class LookAtSkyGoal extends Goal {
     private final PathAwareEntity mob;
-    private final AnimalEntityDuck duck;
+    private final LightDesireDuck duck;
 
-    public LookAtSkyGoal(PathAwareEntity mob, AnimalEntityDuck duck) {
+    public LookAtSkyGoal(PathAwareEntity mob, LightDesireDuck duck) {
         this.mob = mob;
         this.duck = duck;
         setControls(EnumSet.of(Control.LOOK));
@@ -24,6 +24,6 @@ public class LookAtSkyGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        return !mob.getWorld().isSkyVisible(mob.getBlockPos()) && !mob.getWorld().isRaining() && duck.ecosystemic$ticksWithSkylight() < 3000;
+        return mob.getRandom().nextDouble() + 0.1d <= duck.ecosystemic$lightLove();
     }
 }

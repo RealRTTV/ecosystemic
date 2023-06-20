@@ -1,9 +1,10 @@
 package ca.rttv.ecosystemic.mixin.net.minecraft.client.network;
 
-import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
 import ca.rttv.ecosystemic.duck.EcosystemicClientPlayPacketListener;
-import ca.rttv.ecosystemic.network.packet.s2c.play.ResetWaterTimerS2CPacket;
-import ca.rttv.ecosystemic.network.packet.s2c.play.VisitedSpaceCountS2CPacket;
+import ca.rttv.ecosystemic.duck.PenDesireDuck;
+import ca.rttv.ecosystemic.duck.WaterDesireDuck;
+import ca.rttv.ecosystemic.network.packet.s2c.play.PenSizeS2CPacket;
+import ca.rttv.ecosystemic.network.packet.s2c.play.ResetConsumingTimerS2CPacket;
 import ca.rttv.ecosystemic.util.WorldUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -23,20 +24,17 @@ public abstract class ClientPlayNetworkHandlerMixin implements EcosystemicClient
     private MinecraftClient client;
 
     @Override
-    public void ecosystemic$onVisitedSpaceCount(VisitedSpaceCountS2CPacket packet) {
-        client.execute(() -> packet.forEach((uuid, count) -> {
-            AnimalEntityDuck duck = (AnimalEntityDuck) client.world.entityManager.getLookup().get(uuid);
-            if (duck != null) {
-                duck.ecosystemic$visitedSpaceCount(count);
+    public void ecosystemic$onPenSize(PenSizeS2CPacket packet) {
+            if (client.world != null && client.world.entityManager.getLookup().get(packet.uuid()) instanceof PenDesireDuck duck) {
+                duck.ecosystemic$penSize(packet.size());
             }
-        }));
     }
 
     @Override
-    public void ecosystemic$onResetWaterTimer(ResetWaterTimerS2CPacket resetWaterTimerS2CPacket) {
-        client.execute(() -> WorldUtils.getClientEntityByUuid(world, resetWaterTimerS2CPacket.uuid()).ifPresent(entity -> {
-            if (entity instanceof AnimalEntityDuck duck) {
-                duck.ecosystemic$waterTimer(40);
+    public void ecosystemic$onResetConsumingTimer(ResetConsumingTimerS2CPacket packet) {
+        client.execute(() -> WorldUtils.getClientEntityByUuid(world, packet.uuid()).ifPresent(entity -> {
+            if (entity instanceof WaterDesireDuck duck) {
+                duck.ecosystemic$timer(packet.ticks(), packet.type());
             }
         }));
     }

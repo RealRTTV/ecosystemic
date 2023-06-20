@@ -1,6 +1,6 @@
 package ca.rttv.ecosystemic.mixin.net.minecraft.entity.passive;
 
-import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
+import ca.rttv.ecosystemic.duck.*;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.HorseEntityModel;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import java.util.List;
 
 @Mixin(HorseEntity.class)
-public abstract class HorseEntityMixin extends AnimalEntity implements AnimalEntityDuck { // todo, it looks awful
+public abstract class HorseEntityMixin extends AnimalEntity implements ConsumingDesireDuck { // todo, it looks awful
     protected HorseEntityMixin(EntityType<? extends AnimalEntity> entityType, World world) {
         super(entityType, world);
     }

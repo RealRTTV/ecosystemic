@@ -1,6 +1,6 @@
 package ca.rttv.ecosystemic.mixin.net.minecraft.entity.passive;
 
-import ca.rttv.ecosystemic.duck.AnimalEntityDuck;
+import ca.rttv.ecosystemic.duck.*;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.CowEntityModel;
@@ -22,10 +22,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.function.IntSupplier;
 
 @Mixin(CowEntity.class)
-public abstract class CowEntityMixin extends PassiveEntityMixin implements AnimalEntityDuck {
+public abstract class CowEntityMixin extends PassiveEntityMixin implements DryDesireDuck, PenDesireDuck, EatingDesireDuck, WaterDesireDuck, LightDesireDuck {
     protected CowEntityMixin(EntityType<? extends PassiveEntity> entityType, World world) {
         super(entityType, world);
     }
@@ -76,8 +75,8 @@ public abstract class CowEntityMixin extends PassiveEntityMixin implements Anima
     }
 
     @Override
-    public void ecosystemic$onDrinkWater(IntSupplier drinkableWaterBlocks) {
-        replenishTicks += (int) (800.0f * ((float) Math.min(12, drinkableWaterBlocks.getAsInt()) / 4.0f));
+    public void ecosystemic$onDrinkWater() {
+        ecosystemic$addSleepingTicks(1800);
     }
 
     @Override
@@ -87,7 +86,7 @@ public abstract class CowEntityMixin extends PassiveEntityMixin implements Anima
 
     @Override
     public float ecosystemic$neckMultiplier() {
-        return 9.0f;
+        return isBaby() ? 5.0f : 9.0f;
     }
 
     @Override
