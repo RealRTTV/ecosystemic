@@ -78,7 +78,7 @@ public abstract class AnimalEntityMixin extends MobEntityMixin {
             }
         } else {
             if (this instanceof LightDesireDuck) {
-                lightLove = Math.min(15, world.getLightLevel(LightType.SKY, getBlockPos()) + 5) / 15.0d;
+                lightLove = 0.0d;
             }
             if (this instanceof EatingDesireDuck) {
                 grassLove = 0.0d;
@@ -175,7 +175,13 @@ public abstract class AnimalEntityMixin extends MobEntityMixin {
             }
         } else {
             if (this instanceof LightDesireDuck) {
-                double effect = Math.min(15, getWorld().getLightLevel(LightType.SKY, getBlockPos()) + 5) / (15.0d * 20_000.0d);
+                int level = getWorld().getLightLevel(LightType.SKY, getBlockPos());
+                if (level >= 11) {
+                    level = 15;
+                } else if (level <= 3) {
+                    level = 0;
+                }
+                double effect = level / (15.0d * 20_000.0d);
                 lightLove = (lightLove + effect) / 1.00005;
             }
         }

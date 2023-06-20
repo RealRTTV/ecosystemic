@@ -75,6 +75,6 @@ public class EscapeRainGoal extends Goal {
 
     protected Optional<Vec3d> locateShelterPos() {
         // limited to the first 25, to keep things not painfully slow
-        return duck.ecosystemic$pen().stream().filter(this::skyVisible).map(Vec3d::ofBottomCenter).limit(25).min(Comparator.comparingDouble(pos -> mob.getPos().squaredDistanceTo(pos))); // jesus thats slow
+        return duck.ecosystemic$pen().stream().filter(this::skyVisible).map(Vec3d::ofBottomCenter).min(Comparator.comparingDouble(pos -> mob.getPos().squaredDistanceTo(pos))); // jesus thats slow
     }
 }
