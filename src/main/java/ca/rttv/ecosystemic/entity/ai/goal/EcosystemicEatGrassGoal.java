@@ -49,7 +49,7 @@ public class EcosystemicEatGrassGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        if (mob.getRandom().nextInt(mob.isBaby() ? 100 : 1000) > 0) {
+        if (mob.getRandom().nextInt(mob.isBaby() ? 100 : 100) > 0) {
             return false;
         }
         if (mob.getPathfindingFavor(mob.getBlockPos()) > 0.5f) {
@@ -92,14 +92,14 @@ public class EcosystemicEatGrassGoal extends Goal {
                     }
                 }
             }
-            if (timer % 3 == 0 && world instanceof ServerWorld serverWorld) {
+            if (timer % getTickCount(4) == 0 && timer < getTickCount(32) && world instanceof ServerWorld serverWorld) {
                 serverWorld.playSoundFromEntity(null, mob, sound, SoundCategory.NEUTRAL, 0.5f, world.random.nextFloat() * 0.2f + 1.0f);
             }
             if (world instanceof ServerWorld serverWorld) {
                 serverWorld.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, world.getBlockState(mob.getBlockPos().down())), mob.getBlockX() + 0.5d, mob.getBlockY() + 1.0d, mob.getBlockZ() + 0.5d, 1, 0.25d, 0.25d, 0.25d, 0.05d);
             }
+            timer = Math.max(timer - 1, 0);
         }
-        timer = Math.max(timer - 1, 0);
     }
 
     @Override

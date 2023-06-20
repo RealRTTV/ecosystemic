@@ -55,7 +55,7 @@ public class DrinkWaterGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        if (mob.getRandom().nextInt(mob.isBaby() ? 100 : 1000) > 0) {
+        if (mob.getRandom().nextInt(mob.isBaby() ? 100 : 100) > 0) {
             return false;
         }
 
@@ -86,12 +86,12 @@ public class DrinkWaterGoal extends Goal {
     public void tick() {
         if (mob.getNavigation().getCurrentPath() != null && mob.getNavigation().getCurrentPath().isFinished()) {
             if (timer == getTickCount(40) && world instanceof ServerWorld serverWorld) {
-                PacketUtils.sendPacketToPlayers(serverWorld, mob.getBlockPos(), new Identifier("ecosystemic", "resetconsumingtimers2cpacket"), new ResetConsumingTimerS2CPacket(mob.getUuid(), getTickCount(40), Nibble.WATER));
+                PacketUtils.sendPacketToPlayers(serverWorld, mob.getBlockPos(), new Identifier("ecosystemic", "resetconsumingtimers2cpacket"), new ResetConsumingTimerS2CPacket(mob.getUuid(), 40, Nibble.WATER));
                 duck.ecosystemic$timer(40, Nibble.WATER);
             }
             if (targetPos != null && waterPos != null && world.getFluidState(waterPos).isOf(Fluids.WATER)) {
                 mob.getLookControl().lookAt(waterPos.getX() + 0.5d, waterPos.getY() + 1.0d, waterPos.getZ() + 0.5d, 1.0f, 1.0f);
-                if (timer % 3 == 0 && world instanceof ServerWorld serverWorld) {
+                if (timer % getTickCount(4) == 0 && timer < getTickCount(32) && world instanceof ServerWorld serverWorld) {
                     serverWorld.playSoundFromEntity(null, mob, SoundEvents.ENTITY_GENERIC_DRINK, SoundCategory.NEUTRAL, 0.5f, world.random.nextFloat() * 0.1f + 0.9f);
                 }
                 if (timer == getTickCount(4)) {
@@ -109,14 +109,16 @@ public class DrinkWaterGoal extends Goal {
             if (waterPos != null && world instanceof ServerWorld serverWorld) {
                 serverWorld.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, world.getBlockState(waterPos)), waterPos.getX() + 0.5d, waterPos.getY() + 1.0d, waterPos.getZ() + 0.5d, 1, 0.25d, 0.25d, 0.25d, 0.05d);
             }
+            timer = Math.max(timer - 1, 0);
         } else {
-            if (!canNavigate && timer % getTickCount(20) < 6 && timer % getTickCount(40) == 0 && world instanceof ServerWorld serverWorld) {
-                world.sendEntityStatus(mob, EntityStatuses.ADD_SPLASH_PARTICLES);
-                serverWorld.playSoundFromEntity(null, mob, SoundEvents.ENTITY_PLAYER_SPLASH, SoundCategory.NEUTRAL, 0.5f, world.random.nextFloat() * 0.1f + 0.9f);
+            if (!canNavigate) {
+                if (timer % getTickCount(20) < 6 && timer % getTickCount(40) == 0 && world instanceof ServerWorld serverWorld) {
+                    world.sendEntityStatus(mob, EntityStatuses.ADD_SPLASH_PARTICLES);
+                    serverWorld.playSoundFromEntity(null, mob, SoundEvents.ENTITY_PLAYER_SPLASH, SoundCategory.NEUTRAL, 0.5f, world.random.nextFloat() * 0.1f + 0.9f);
+                }
+                timer = Math.max(timer - 1, 0);
             }
         }
-
-        timer = Math.max(timer - 1, 0);
     }
 
     @Override

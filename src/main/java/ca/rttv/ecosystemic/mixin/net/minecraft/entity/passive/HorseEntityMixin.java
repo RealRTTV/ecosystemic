@@ -30,7 +30,7 @@ public abstract class HorseEntityMixin extends AnimalEntity implements Consuming
 
     @Override
     public float ecosystemic$neckMultiplier() {
-        return 3.5f;
+        return isBaby() ? 14.0f : 12.0f;
     }
 
     @Override

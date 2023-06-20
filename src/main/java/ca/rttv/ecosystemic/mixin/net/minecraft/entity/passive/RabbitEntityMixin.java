@@ -38,6 +38,6 @@ public abstract class RabbitEntityMixin extends AnimalEntity implements PenDesir
 
     @Override
     public float ecosystemic$neckMultiplier() {
-        return 6.0f;
+        return isBaby() ? 5.0f :6.0f;
     }
 }

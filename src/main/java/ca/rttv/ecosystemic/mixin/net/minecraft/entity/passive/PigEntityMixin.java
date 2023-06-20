@@ -38,6 +38,6 @@ public abstract class PigEntityMixin extends AnimalEntity implements PenDesireDu
 
     @Override
     public float ecosystemic$neckMultiplier() {
-        return 7.5f;
+        return isBaby() ? 5.0f : 7.5f;
     }
 }

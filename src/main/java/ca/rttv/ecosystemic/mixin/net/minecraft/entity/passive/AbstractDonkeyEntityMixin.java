@@ -31,7 +31,7 @@ public abstract class AbstractDonkeyEntityMixin extends AnimalEntity implements 
 
     @Override
     public float ecosystemic$neckMultiplier() {
-        return 3.5f;
+        return isBaby() ? 7.0f : 9.0f;
     }
 
     @Override

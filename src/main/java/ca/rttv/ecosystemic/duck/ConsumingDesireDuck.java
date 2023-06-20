@@ -15,6 +15,10 @@ public interface ConsumingDesireDuck extends PenDesireDuck {
 
     float ecosystemic$basePivotY();
 
+    default float ecosystemic$headMultiplier() {
+        return 1.0f;
+    }
+
     float ecosystemic$neckMultiplier();
 
     boolean ecosystemic$addPitch();
